@@ -1,30 +1,84 @@
 # Zip Code bitmap
-This article will describe the creation and use of a PNG which shows the familiar outlines of U.S. states while also encoding the zip codes of each pixel in the color of the image. This image (plus a little bit of javascript) can be used to map clicks to zips without a server call.
+This article will describe the creation and use of an image that shows the familiar outlines of U.S. states while also encoding the zip codes of each pixel in the color of the image. This image (plus a little bit of javascript) can be used to map clicks to zips without a server call.
+
+First, some background…
 
 ### Political Maps
 
 We learn in grammar school that a "political map" is any map that is primarily designed to show governmental boundaries and regions. This is a useful way to learn geography, and it's again useful for orienting yourself once you know that geography.
 
-![Basic Political Map with black borders separating zip codes](./zips_with_states.png) //TODO make this just a state map
+![Basic Political Map with black borders separating zip codes](./state-line.png)
+familiar outline of U.S. states. data from [U.S. Census GIS files](https://www.census.gov/programs-surveys/geography/geographies/mapping-files.2017.html)
 
-Thanks to Appel and Haken, we know that all planar maps can be colored with as few as 4 colors. This makes coloring efficient for mapmakers who don't want to put every color of the rainbow on their palette.
+Thanks to Appel and Haken, we know that all planar maps can be colored using [no more than 4 colors](https://en.wikipedia.org/wiki/Four_color_theorem). This makes coloring efficient for mapmakers who don't want to put every color of the rainbow on their palette.
 
-[Picture of 4-color US map]
+![Picture of 4-color US map](./state-four-color.png)
+coloring inspired by [wikipedia](https://en.wikipedia.org/wiki/Four_color_theorem#/media/File:Map_of_United_States_vivid_colors_shown.png)
 
-But you might use more than 4 colors if you want a color choice to tell your audience something about the region. One exercise of this is a choropleth. A choropleth map is...TODO
+But you might use more than 4 colors if you want a color choice to tell your audience something about the region. One exercise of this is a _choropleth_. A choropleth map is a map that uses shading or color to impart some information about regions on the map. One common quantitative choropleth is a population density map.
 
-[Choropleth for population density by state]
+![Choropleth for population density by state](./state-pop-density.png)
+```
+csv-to-ndjson <(tail -n+5 ./data/census/population/pop_density.csv) > data/census/population/state-historic-population.ndjson
 
-Another reason you might use many colors in a map rendering is to encode data within the color. That is, if you know the precise color of a point on a map, you could trace it back to some region identifier or other piece of information.
+ndjson-join "d.properties.NAME" "d.STATE_OR_REGION" \
+    data/census/cb_2017_us_state_500k/cb_2017_us_state_500k.ndjson \
+    data/census/population/state-historic-population.ndjson | \
+    ndjson-map 'Object.assign(d[0], d[1])' > data/census/states_with_population.ndjson
+
+render-oars data/census/states_with_population.ndjson -M mappers/choropleth.js -d "{
+    f: function(d){ return parseFloat(d['2010_DENSITY'].replace(',',''))},
+    colorScale: d3.scaleSequential(d3.interpolateReds),
+    minmax: [0,10,20,40,80,160,320,640,1280,2560]
+  }" -o output/zipbitmap/state-pop-density
+```
+
+![Choropleth for population density by zip](./zip-pop-density.png)
+```
+csv-to-ndjson data/census/population/ACS_17_5YR_DP05/ACS_17_5YR_DP05_with_ann.csv GEO.id2 HC01_VC03 \
+  | tail -n +2 > data/census/population/zip-total-population.ndjson
+
+ndjson-join "d.properties.GEOID10" "d['GEO.id2']" \
+  data/census/cb_2017_us_zcta510_500k/cb_2017_us_zcta510_500k.ndjson \
+  data/census/population/zip-total-population.ndjson | \
+  ndjson-map 'Object.assign(d[0], d[1])' > data/census/zips_with_population.ndjson
+
+render-oars data/census/zips_with_population.ndjson -M mappers/choropleth.js -d '{
+    f: function(d){ return parseFloat(d.HC01_VC03)/(d.properties.ALAND10*3.861e-7) },
+    colorScale: d3.scaleSequential(d3.interpolateReds),
+    minmax: [0,10,20,40,80,160,320,640,1280,2560]
+  }' -o output/zipbitmap/zip-pop-density
+```
+
+Another reason you might use many colors in a map rendering is to _encode data_ within the color. That is, if you know the precise color of a point on a map, you could trace it back to some region identifier or other piece of information.
 
 ### State bitmap:
 Here is a state map with a unique color for each state.
-![United States Maps with distinct colors for each state.](./zip-bitmap.png)
+
+![United States Maps with distinct colors for each state.](./state.png)
+
+We can then use the html `<canvas>` element to read the colors in that map and spit out the rgb value as you move your mouse.
+
+      rgb on mouseover //TODO every codelet should have a link to the source
+
+If we store an array of state labels, we can then use the same image to show the state abbreviation on mouseover or click!
+
+    # fetch the census file listing counties and states.
+    # this file contains the state codes needed to map the state geo data to the state abbreviations
+    # wget 'https://www2.census.gov/geo/docs/reference/codes/files/national_county.txt'
+    # extract state number to name relationship
+    # cat data/census/national_county.txt | tr ',' '\t' | cut -f 1,2 | sort -u | sort -k2 | awk '{print "\""$2"\":\""$1"\","}'
+    render-oars data/census/cb_2017_us_state_500k/cb_2017_us_state_500k.ndjson \
+      -m 'd.properties.STATEFP + "\":\"" + d.properties.STUSPS' \
+      | tr -d "\\" | sed 's/$/,/' | sort
+
+(TODO img w/state name on mouseover)
 
 ### Zip code bitmap:
-We can go a step further to show zip codes.
+We can go a step further and encode zip codes in our map.
 TODO define ZCTA.
-TODO talk about precedence and how colors are encoded 
+TODO talk about precedence and how colors are encoded
+
 ![United States Maps with distinct colors for each zip code.](./zip-bitmap2.png)
 
 So the naive zip code map encodes all the information we need to determine which state and zip each pixel belongs to. But it does not
@@ -32,11 +86,26 @@ encode state information in a visually useful way!
 
 (Note about areas not part of a zip)
 
+```
+#TODO cleanup
+cat data/census/zcta_county_rel_10.txt | cut -d ',' -f 2,1 | sort -u | awk -F',' '{print "{ \"properties\": { \"ZCTA5CE10\": \""$1"\", \"STATEFP\": \""$2"\"}}" }' > data/census/zip-to-state.ndjson
+ndjson-join --left 'd.properties.ZCTA5CE10' data/census/zips_with_states.ndjson data/census/zip-to-state.ndjson > temp.ndjson
+ndjson-map 'd[0].properties.STATEFP = d.length > 1 && d[1] != null ? d[1].properties.STATEFP : d[0].properties.STATEFP, d[0]' < <(cat temp.ndjson) > temp2.ndjson
+```
+
 (Zip+State with higher precedence for states)
 
 ### Uh oh! multi-state zips!
 
-...Handle it
+You probably noticed something unsettling about the above map. That's because there are some ZCTAs that span multiple states, giving the appearance that some states are hemoraging into neighboring states.
+
+    cat data/census/zcta_county_rel_10.txt | cut -d ',' -f 1,2 | sort -u | cut -d ',' -f 1 | dtk uc | grep -v '^1' | cut -f 2 | tr '\n' ','
+
+//TODO show zoom in of 4-corners
+
+...Handle it:
+1. Find all multistate zctas
+1.
 
 ### Why it's useful
 
