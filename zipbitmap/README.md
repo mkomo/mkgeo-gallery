@@ -72,14 +72,15 @@ If we store an array of state labels, we can then use the same image to show the
       -m 'd.properties.STATEFP + "\":\"" + d.properties.STUSPS' \
       | tr -d "\\" | sed 's/$/,/' | sort
 
-(TODO img w/state name on mouseover)
+(TODO img w/state name on mouseover) - explain and link to js
+TODO explain --crisp option
 
 ### Zip code bitmap:
 We can go a step further and encode zip codes in our map.
 TODO define ZCTA.
 TODO talk about precedence and how colors are encoded
 
-![United States Maps with distinct colors for each zip code.](./zip-bitmap2.png)
+![United States Maps with distinct colors for each zip code.](./zip-high-bits.png)
 
 So the naive zip code map encodes all the information we need to determine which state and zip each pixel belongs to. But it does not
 encode state information in a visually useful way!
@@ -88,24 +89,36 @@ encode state information in a visually useful way!
 
 ```
 #TODO cleanup
+geojson-merge -s cb_2017_us_state_500k/cb_2017_us_state_500k.geojson cb_2017_us_zcta510_500k/cb_2017_us_zcta510_500k.geojson > cb_zips_with_states.geojson
+ndjson-split cb_zips_with_states.geojson > cb_zips_with_states.ndjson
+
+wget https://www2.census.gov/geo/docs/maps-data/data/rel/zcta_county_rel_10.txt
 cat data/census/zcta_county_rel_10.txt | cut -d ',' -f 2,1 | sort -u | awk -F',' '{print "{ \"properties\": { \"ZCTA5CE10\": \""$1"\", \"STATEFP\": \""$2"\"}}" }' > data/census/zip-to-state.ndjson
 ndjson-join --left 'd.properties.ZCTA5CE10' data/census/zips_with_states.ndjson data/census/zip-to-state.ndjson > temp.ndjson
 ndjson-map 'd[0].properties.STATEFP = d.length > 1 && d[1] != null ? d[1].properties.STATEFP : d[0].properties.STATEFP, d[0]' < <(cat temp.ndjson) > temp2.ndjson
+ndjson-sort 'a.properties.AFFGEOID10 ? a.properties.AFFGEOID10.localeCompare(b.properties.AFFGEOID10) : -1' < temp2.ndjson > temp3.ndjson
 ```
 
-(Zip+State with higher precedence for states)
+![Zip+State with higher precedence for states](./zip-bitmap2.png)
 
 ### Uh oh! multi-state zips!
 
 You probably noticed something unsettling about the above map. That's because there are some ZCTAs that span multiple states, giving the appearance that some states are hemoraging into neighboring states.
 
-    cat data/census/zcta_county_rel_10.txt | cut -d ',' -f 1,2 | sort -u | cut -d ',' -f 1 | dtk uc | grep -v '^1' | cut -f 2 | tr '\n' ','
-
-//TODO show zoom in of 4-corners
+```
+cat data/census/zcta_county_rel_10.txt | cut -d ',' -f 1,2 | sort -u | cut -d ',' -f 1 | dtk uc | grep -v '^1' | cut -f 2 | tr '\n' ','
+```
 
 ...Handle it:
 1. Find all multistate zctas
-1.
+```
+cat data/census/zcta_county_rel_10.txt | cut -d ',' -f 1,2 | sort -u | cut -d ',' -f 1 | dtk uc | grep -v '^1' | cut -f 2
+```
+1. We want the multistaters to look like part of each state they're a part of when they're inside that state.
+  * One way to do that is to update the ndjson file to split the zips at state lines, but I don't know how to do that (certainly not with my current toolset).
+  * Another way to do that is to draw the zip codes in a translucent manner so that the underlying state shines through. The alpha calculation is reversible, so we should be able to recover both the zip and state from these translucent overlays.
+
+![Zip+State with semi-opaque multi-state zips](./multi-state-zips-wrong.png)
 
 ### Why it's useful
 
