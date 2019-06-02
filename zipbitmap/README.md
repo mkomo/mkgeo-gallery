@@ -122,9 +122,15 @@ cat data/census/zcta_county_rel_10.txt | cut -d ',' -f 1,2 | sort -u | cut -d ',
 
 ### Why it's useful
 
-It's large, but doesn't require server round trips. (Quaint idea...)
+This final image weighs in at about 600kB, but this is not large relative to naive encodings of the pixel-to-zipcode map that you would have to have access to in order to map mouseovers or clicks to zipcodes. If you wanted to handle a clickable map without server roundtrips, pre-loading this map would be an efficient way to do that. In short, you allow the size-limiting optimizations of PNGs to do the work of encoding this data.
 
 ### The Code
+
+I used many libraries to generate the above images, but all of the custom code is written in javascript.
+
+1. [mkgeo utilities](https://github.com/mkomo/mkgeo)
+1. [zip and state bitmap generation and decoding](https://github.com/mkomo/mkgeo/blob/master/mappers/zipbitmap.js)
+1. [viewer with mouseover interpretation of colors](https://github.com/mkomo/mkgeo/blob/master/viewer/index.html)
 
 ### Notes
 [data about pixels per state, pixes per sq mile of this projection]
