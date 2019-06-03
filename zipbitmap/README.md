@@ -134,3 +134,10 @@ I used many libraries to generate the above images, but all of the custom code i
 
 ### Notes
 [data about pixels per state, pixes per sq mile of this projection]
+
+### next steps
+
+1. [ ] link to the working viewer in github pages
+1. [ ] css dramatic mouseover of images and css for caption
+1. [ ] command line geometry intersection tool.
+1. [ ] color curves working
