@@ -1,0 +1,90 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+ "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+  <title>mkgeo viewer</title>
+  <meta name="viewport" content="width=device-width">
+  <style>
+  body {
+    margin: 0;
+    background-color: #555;
+    position: relative;
+    font-family: monospace;
+  }
+
+    canvas {
+      border: 0;
+      cursor: default;
+      margin: 0px auto;
+      display: block;
+    }
+    img#map {
+      display:none;
+    }
+    #message {
+      position: fixed;
+      padding: 10px;
+      background-color: #fff;
+      left: 10px;
+      top: 10px;
+    }
+  </style>
+</head>
+<body>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.7.0/d3.min.js"> </script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>
+<script type="text/javascript" src="/mkgeo/mappers/zipbitmap.js"></script>
+<script type="text/javascript">
+
+
+let {
+  getStateFromColor,
+  getZipFromColor,
+  explainGeoColor,
+} = zipbitmap(null, true);
+
+function getDimensions() {
+  return {
+    width: window.innerWidth,
+    height: window.innerHeight
+  }
+}
+function loadCanvas(){//onReady
+  let dim = getDimensions();
+  if(document.getElementById('canvas')) {
+    var image = document.getElementById('map');
+    canvas = document.getElementById('canvas');
+    canvasContext = canvas.getContext('2d');
+
+    canvas.setAttribute('width', image.width);
+    canvas.setAttribute('height', image.height);
+    canvasContext.drawImage(image, 0, 0);
+  };
+  $('#canvas').mousemove(function(e){
+    var offset = $('#canvas').offset();
+    var x = Math.floor(e.pageX - offset.left);
+    var y = Math.floor(e.pageY - offset.top);
+    var imgData = canvasContext.getImageData(x, y, 1, 1);
+    if (imgData.data.some(a=>a!=255)) {
+      let output = [];
+      // console.log(imgData.data.every(a=>a==255), imgData.data);
+      output.push(getStateFromColor(imgData.data));
+      output.push(getZipFromColor(imgData.data));
+      output.push(explainGeoColor(imgData.data));
+      output.push(imgData.data);
+      $('#message').html(output.join('\n'));
+    } else {
+      $('#message').html('empty??');
+    }
+  });
+}
+
+</script>
+<div style="margin: auto">
+  <img id="map" src="../zipbitmap/multi-state-zips-wrong.png" alt="" onload="loadCanvas()" />
+  <canvas id="canvas"></canvas>
+  <pre id="message"></pre>
+</div>
+</body>
+</html>
