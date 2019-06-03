@@ -72,7 +72,7 @@ function loadCanvas(){//onReady
       output.push(getStateFromColor(imgData.data));
       output.push(getZipFromColor(imgData.data));
       output.push(explainGeoColor(imgData.data));
-      output.push(imgData.data);
+      output.push("color: " + imgData.data);
       $('#message').html(output.join('\n'));
     } else {
       $('#message').html('empty??');

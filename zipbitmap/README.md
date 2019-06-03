@@ -26,7 +26,7 @@ ndjson-join "d.properties.NAME" "d.STATE_OR_REGION" \
     data/census/population/state-historic-population.ndjson | \
     ndjson-map 'Object.assign(d[0], d[1])' > data/census/states_with_population.ndjson
 
-render-oars data/census/states_with_population.ndjson -M mappers/choropleth.js -d "{
+mkgeo-render data/census/states_with_population.ndjson -M mappers/choropleth.js -d "{
     f: function(d){ return parseFloat(d['2010_DENSITY'].replace(',',''))},
     colorScale: d3.scaleSequential(d3.interpolateReds),
     minmax: [0,10,20,40,80,160,320,640,1280,2560]
@@ -43,7 +43,7 @@ ndjson-join "d.properties.GEOID10" "d['GEO.id2']" \
   data/census/population/zip-total-population.ndjson | \
   ndjson-map 'Object.assign(d[0], d[1])' > data/census/zips_with_population.ndjson
 
-render-oars data/census/zips_with_population.ndjson -M mappers/choropleth.js -d '{
+mkgeo-render data/census/zips_with_population.ndjson -M mappers/choropleth.js -d '{
     f: function(d){ return parseFloat(d.HC01_VC03)/(d.properties.ALAND10*3.861e-7) },
     colorScale: d3.scaleSequential(d3.interpolateReds),
     minmax: [0,10,20,40,80,160,320,640,1280,2560]
@@ -68,7 +68,7 @@ If we store an array of state labels, we can then use the same image to show the
     # wget 'https://www2.census.gov/geo/docs/reference/codes/files/national_county.txt'
     # extract state number to name relationship
     # cat data/census/national_county.txt | tr ',' '\t' | cut -f 1,2 | sort -u | sort -k2 | awk '{print "\""$2"\":\""$1"\","}'
-    render-oars data/census/cb_2017_us_state_500k/cb_2017_us_state_500k.ndjson \
+    mkgeo-render data/census/cb_2017_us_state_500k/cb_2017_us_state_500k.ndjson \
       -m 'd.properties.STATEFP + "\":\"" + d.properties.STUSPS' \
       | tr -d "\\" | sed 's/$/,/' | sort
 
