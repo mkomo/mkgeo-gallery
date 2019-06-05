@@ -8,12 +8,12 @@ First, some background…
 We learn in grammar school that a "political map" is any map that is primarily designed to show governmental boundaries and regions. This is a useful way to learn geography, and it's again useful for orienting yourself once you know that geography.
 
 ![Basic Political Map with black borders separating zip codes](./state-line.png)
-familiar outline of U.S. states. data from [U.S. Census GIS files](https://www.census.gov/programs-surveys/geography/geographies/mapping-files.2017.html)
+*familiar outline of U.S. states. data from [U.S. Census GIS files](https://www.census.gov/programs-surveys/geography/geographies/mapping-files.2017.html)*
 
 Thanks to Appel and Haken, we know that all planar maps can be colored using [no more than 4 colors](https://en.wikipedia.org/wiki/Four_color_theorem). This makes coloring efficient for mapmakers who don't want to put every color of the rainbow on their palette.
 
 ![Picture of 4-color US map](./state-four-color.png)
-coloring inspired by [wikipedia](https://en.wikipedia.org/wiki/Four_color_theorem#/media/File:Map_of_United_States_vivid_colors_shown.png)
+*coloring inspired by [wikipedia](https://en.wikipedia.org/wiki/Four_color_theorem#/media/File:Map_of_United_States_vivid_colors_shown.png)*
 
 But you might use more than 4 colors if you want a color choice to tell your audience something about the region. One exercise of this is a _choropleth_. A choropleth map is a map that uses shading or color to impart some information about regions on the map. One common quantitative choropleth is a population density map.
 
@@ -118,7 +118,8 @@ cat data/census/zcta_county_rel_10.txt | cut -d ',' -f 1,2 | sort -u | cut -d ',
   * One way to do that is to update the ndjson file to split the zips at state lines, but I don't know how to do that (certainly not with my current toolset).
   * Another way to do that is to draw the zip codes in a translucent manner so that the underlying state shines through. The alpha calculation is reversible, so we should be able to recover both the zip and state from these translucent overlays.
 
-![Zip+State with semi-opaque multi-state zips](./multi-state-zips-wrong.png)
+[![Zip+State with semi-opaque multi-state zips](./multi-state-zips-wrong.png)](/mkgeo-gallery/viewer/)
+*click on the above map to see the zip code and state on mouseover*
 
 ### Why it's useful
 

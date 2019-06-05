@@ -1,0 +1,12 @@
+---
+---
+
+@import "{{ site.theme }}";
+
+img + em {
+	font-size: 0.8em;
+}
+
+a + em {
+	font-size: 0.8em;
+}
