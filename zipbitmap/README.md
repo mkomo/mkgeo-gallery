@@ -123,7 +123,7 @@ cat data/census/zcta_county_rel_10.txt | cut -d ',' -f 1,2 | sort -u | cut -d ',
 
 ### Why it's useful
 
-This final image weighs in at about 600kB, but this is not large relative to naive encodings of the pixel-to-zipcode map that you would have to have access to in order to map mouseovers or clicks to zipcodes. If you wanted to handle a clickable map without server roundtrips, pre-loading this map would be an efficient way to do that. In short, you allow the size-limiting optimizations of PNGs to do the work of encoding this data.
+This final image weighs in at about 600kB, but this is not large relative to naive encodings of the pixel-to-zipcode map that you would have to have access to in order to map mouseovers or clicks to zipcodes. If you wanted to handle a clickable map without server roundtrips, pre-loading this map would be an efficient way to do that. In short, you allow the size-limiting, non-lossy optimizations of PNGs to do the work of encoding this data.
 
 ### The Code
 
