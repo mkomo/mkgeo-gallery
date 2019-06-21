@@ -70,18 +70,14 @@ ndjson-sort 'a.properties.AFFGEOID10 ? a.properties.AFFGEOID10.localeCompare(b.p
 
 You probably noticed something unsettling about the above map. That's because there are some ZCTAs that span multiple states, giving the appearance that some states are hemoraging into neighboring states.
 
-```
-cat data/census/zcta_county_rel_10.txt | cut -d ',' -f 1,2 | sort -u | cut -d ',' -f 1 | dtk uc | grep -v '^1' | cut -f 2 | tr '\n' ','
-```
-
-...Handle it:
+Let's handle it!
 1. Find all multistate zctas
 ```
 cat data/census/zcta_county_rel_10.txt | cut -d ',' -f 1,2 | sort -u | cut -d ',' -f 1 | dtk uc | grep -v '^1' | cut -f 2
 ```
 1. We want the multistaters to look like part of each state they're a part of when they're inside that state.
-  * One way to do that is to update the ndjson file to split the zips at state lines, but I don't know how to do that (certainly not with my current toolset).
-  * Another way to do that is to draw the zip codes in a translucent manner so that the underlying state shines through. The alpha calculation is reversible, so we should be able to recover both the zip and state from these translucent overlays.
+  * One way to do that is to update the ndjson file to split the zips at state lines, but that isn't a straightforward task (certainly not with my current toolset).
+  * Another way to do that is to draw the multi-state zip codes in a translucent manner so that the underlying states show through. The alpha calculation is reversible, so we should be able to recover both the zip and state from these translucent overlays.
 
 [![Zip+State with semi-opaque multi-state zips](./multi-state-zips.png)](/mkgeo-gallery/viewer/)
 *click on the above map to see the zip code and state on mouseover*
