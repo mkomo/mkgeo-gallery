@@ -64,7 +64,7 @@ ndjson-map 'd[0].properties.STATEFP = d.length > 1 && d[1] != null ? d[1].proper
 ndjson-sort 'a.properties.AFFGEOID10 ? a.properties.AFFGEOID10.localeCompare(b.properties.AFFGEOID10) : -1' < temp2.ndjson > temp3.ndjson
 ```
 
-![Zip+State with higher precedence for states](./zip-bitmap2.png)
+![Zip+State with higher precedence for states](./zip-bitmap.png)
 
 ### Uh oh! multi-state zips!
 
@@ -83,7 +83,7 @@ cat data/census/zcta_county_rel_10.txt | cut -d ',' -f 1,2 | sort -u | cut -d ',
   * One way to do that is to update the ndjson file to split the zips at state lines, but I don't know how to do that (certainly not with my current toolset).
   * Another way to do that is to draw the zip codes in a translucent manner so that the underlying state shines through. The alpha calculation is reversible, so we should be able to recover both the zip and state from these translucent overlays.
 
-[![Zip+State with semi-opaque multi-state zips](./multi-state-zips-wrong.png)](/mkgeo-gallery/viewer/)
+[![Zip+State with semi-opaque multi-state zips](./multi-state-zips.png)](/mkgeo-gallery/viewer/)
 *click on the above map to see the zip code and state on mouseover*
 
 ### Why it's useful
