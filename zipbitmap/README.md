@@ -22,22 +22,21 @@ Here is a state map with a unique color for each state.
 
 ![United States Maps with distinct colors for each state.](./state.png)
 
-We can then use the html `<canvas>` element to read the colors in that map and spit out the rgb value as you move your mouse.
-
-      rgb on mouseover //TODO every codelet should have a link to the source
+Below we'll use the html `<canvas>` element to read the colors in that map and spit out the rgb value as you move your mouse.
 
 If we store an array of state labels, we can then use the same image to show the state abbreviation on mouseover or click!
 
     # fetch the census file listing counties and states.
     # this file contains the state codes needed to map the state geo data to the state abbreviations
-    # wget 'https://www2.census.gov/geo/docs/reference/codes/files/national_county.txt'
-    # extract state number to name relationship
-    # cat data/census/national_county.txt | tr ',' '\t' | cut -f 1,2 | sort -u | sort -k2 | awk '{print "\""$2"\":\""$1"\","}'
+    wget 'https://www2.census.gov/geo/docs/reference/codes/files/national_county.txt'
+    # extract state number-to-name relationship
+    cat data/census/national_county.txt | tr ',' '\t' | cut -f 1,2 | sort -u | sort -k2 | awk '{print "\""$2"\":\""$1"\","}'
+    #Output state labels
     mkgeo-render data/census/cb_2017_us_state_500k/cb_2017_us_state_500k.ndjson \
       -m 'd.properties.STATEFP + "\":\"" + d.properties.STUSPS' \
       | tr -d "\\" | sed 's/$/,/' | sort
 
-(TODO img w/state name on mouseover) - explain and link to js
+TODO img w/state name on mouseover - explain and link to js
 TODO explain --crisp option
 
 ### Zip code bitmap:
@@ -50,7 +49,7 @@ TODO talk about precedence and how colors are encoded
 So the naive zip code map encodes all the information we need to determine which state and zip each pixel belongs to. But it does not
 encode state information in a visually useful way!
 
-(Note about areas not part of a zip)
+(Note: some land in the U.S. falls inside a state, but not in a ZCTA. These areas will have the unaffected state color)
 
 ```
 #TODO cleanup
