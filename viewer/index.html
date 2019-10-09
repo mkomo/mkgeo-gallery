@@ -39,6 +39,7 @@
 
 
 let {
+  getStateDetailFromColor,
   getStateFromColor,
   getZipFromColor,
   explainGeoColor,
@@ -69,8 +70,11 @@ function loadCanvas(){//onReady
     if (imgData.data.some(a=>a!=255)) {
       let output = [];
       // console.log(imgData.data.every(a=>a==255), imgData.data);
-      output.push(getStateFromColor(imgData.data));
-      output.push(getZipFromColor(imgData.data));
+      let state = getStateFromColor(imgData.data)
+      let group = getZipFromColor(imgData.data)
+      output.push(`${group}, ${state}`);
+      output.push(getStateDetailFromColor(imgData.data));
+      output.push(group);
       output.push(explainGeoColor(imgData.data));
       output.push("color: " + imgData.data);
       $('#message').html(output.join('\n'));
@@ -81,10 +85,21 @@ function loadCanvas(){//onReady
 }
 
 </script>
-<div style="margin: auto">
-  <img id="map" src="../zipbitmap/multi-state-zips.png" alt="" onload="loadCanvas()" />
+<div id="container" style="margin: auto">
   <canvas id="canvas"></canvas>
   <pre id="message"></pre>
 </div>
+
+<script type="text/javascript">
+  let urlParams = new URLSearchParams(window.location.search);
+  let bitmap = urlParams.get('bitmap') || 'zipbitmap/multi-state-zips';
+  let src = `../${bitmap}.png`
+  let img = document.createElement('img');
+  img.src = src;
+  img.id = "map"
+  img.onload = loadCanvas;
+  document.getElementById('container').append(img)
+</script>
+
 </body>
 </html>
