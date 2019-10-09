@@ -41,6 +41,7 @@
 let {
   getStateDetailFromColor,
   getStateFromColor,
+  getZipDetailFromColor,
   getZipFromColor,
   explainGeoColor,
 } = zipbitmap(null, true);
@@ -74,7 +75,7 @@ function loadCanvas(){//onReady
       let group = getZipFromColor(imgData.data)
       output.push(`${group}, ${state}`);
       output.push(getStateDetailFromColor(imgData.data));
-      output.push(group);
+      output.push(getZipDetailFromColor(imgData.data));
       output.push(explainGeoColor(imgData.data));
       output.push("color: " + imgData.data);
       $('#message').html(output.join('\n'));
