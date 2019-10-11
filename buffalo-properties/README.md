@@ -1,19 +1,19 @@
 # Buffalo Property Data
-Buffalo provides great geospacial data through their [open data program](https://data.buffalony.gov/). But, as of this writing, the city does not have a facility to access property assessment data. Luckily, the city's [Online Assessment Role System (OARS)](https://buffalo.oarsystem.com/) provides a lot of tax, assessment and structure information.
+Buffalo provides great geospacial data through their [open data program](https://data.buffalony.gov/). But, as of this writing, the city does not have a facility to access property assessment data. Luckily, the city's [Online Assessment Role System (OARS)](https://buffalo.oarsystem.com/) provides a lot of tax, assessment and structure information. For this page, data was obtained from the **OARS** site in late 2018, then again in late 2019 after the city underwent a reassessment.
 
 ## Buffalo Parcels from Open Data Buffalo
+Here is a map of the raw parcel data obtained from data.buffalony.gov
 ![Map of Parcels from Open Data Buffalo](./scaled/Green_Code_Zoning_2017_data.png)
 
-## Open Data Buffalo Parcels without OARS Data
+And here's a map of those parcels color-coded based on the *use code* pulled from the **OARS** data
+![Map of all buffalo parcels color-coded by OARS use code](./scaled/use-categories.png)
+TODO (categorical legend with counts)
+
+Note some rights of way and various other parcels do not have **OARS** data associated with them:
 ![Map of Open Data Buffalo Parcels without OARS Data](./scaled/no_oars_data.png)
-TODO change this from orange to medium gray.
 
-## All buffalo parcels color-coded by OARS use code
-![Map of all buffalo parcels color-coded by OARS use code](./scaled/all-alias.rsvg-convert.png)
-TODO (categorical legend with counts), change colors to be more logical and use the same medium gray as above.
-
-# Single family homes: Assessed Value
-## Assessed Fair Market Value for single family homes
+## Single family homes: Assessed Value
+### Assessed Fair Market Value for single family homes
 ![Map of single family homes in Buffalo color-coded by Assessed price](./scaled/single-family-assessment.png)
 ```
 cat ./final1.ndjson | ndjson-filter 'd.properties && d.properties.oars_props && d.properties.oars_props.use == "210 - 1 Family Res"' | ndjson-map "parseFloat(d.properties.oars_props.assessment.fmv.replace(/[\$,]/g, ''))" | dtk quantile 100 | tee percentiles/single-family-assessment.txt
@@ -22,7 +22,7 @@ mkgeo-render data/buffalo/oars-2019/final1.ndjson -f 'd.properties && d.properti
 TODO (scale legend has counts)
 ```
 
-## Assessed FMV per sqft for single family homes
+### Assessed FMV per sqft for single family homes
 ![Map of single family homes in Buffalo color-coded by Assessed price per square foot](./scaled/single-family-assessment-per-sqft.png)
 ```
 cat ./final1.ndjson | ndjson-filter 'd.properties && d.properties.oars_props && d.properties.oars_props.use == "210 - 1 Family Res"' | ndjson-map 'parseFloat(d.properties.oars_props.assessment.fmv.replace(/[\$,]/g, "")/d.properties.oars_props.structures[0].total_sqft)' | dtk quantile 100 | tee percentiles/single-family-assessment-per-sqft.txt
@@ -31,30 +31,39 @@ mkgeo-render data/buffalo/oars-2019/final1.ndjson -f 'd.properties && d.properti
 ```
 If you switch back and forth between these two photos, you notice that there are certain areas of the city where price per sqft percentile diverges from price percentile. This wouldn't be true if it always held that "Bigger houses are nicer houses." Here's a map which shows this divergence, i.e. smaller, more desirable houses and larger less desirable houses.
 
-(graph TK TODO)
+(graph TODO)
 
-*TODO* Assessed price per lot sqft (total land assessment divided by acreage)
+### 2019 Assessment change heat map
+Buffalo underwent a city-wide reassessment in 2019. Ultimately, the total fair market value of all properties that we have data for went up 26.8% from $12,899,640,205.00 to $16,353,575,670.50. Of that total, single-family homes made up 29.5% of the total in the new assessment, going up by 20.3% from $4,013,993,150.82 to $4,827,295,224.66.
 
-*TODO* Assessment percentile relative to other properties with same use.
-
-## Assessment change heat map
-Buffalo underwent a city-wide reassessment in 2019. This map shows the percent change in assessed value of single family homes.
+This map shows the percent change in assessed value of single family homes.
 ![Map of single family homes in Buffalo color-coded by percent change in assessed value](./scaled/single-family-assessment-change.png)
 ```
 mkgeo-render data/buffalo/oars-2019/final1_assessment_history.ndjson -f 'd.properties && d.properties.oars_props && d.properties.oars_props.use == "210 - 1 Family Res" && d.properties.oars_props.assessment_2018.fmv && d.properties.oars_props.assessment.fmv' -M mappers/choropleth.js -d "{f: function(d){ return parseFloat(d.properties.oars_props.assessment.fmv.replace(/[\$,]/g, ''))/parseFloat(d.properties.oars_props.assessment_2018.fmv.replace(/[\$,]/g, ''))}, colorScale: d3.scaleSequential(d3.interpolateRdYlGn), minmax: [0.25,1,4]}" --size 8000 -o output/buffalo-properties/single-family-assessment-change
 ```
 
-Ultimately, the total fair market value of all properties that we have data for went up TK% from $TK to $TK. Of that total, single-family homes made up TK% and changed by TK% from $TK to $TK.
+When all property types are added back to the picture, you get a better sense of how (and where) things changed since the last reassessment.
 
-# Historical heatmaps
-## Year Built (red-yellow-green scale)
+#### Relative (percent) Change
+![Map of all properties in Buffalo color-coded by percent change in assessed value](./scaled/all-property-assessment-change.png)
+
+#### Absolute (dollar amount) Change
+![Map of all properties in Buffalo color-coded by dollar amount change in assessed value](./scaled/all-property-assessment-change-abs.png)
+
+
+
+## Historical heatmaps
+### Year Built (red-yellow-green scale)
 ![Map of all buffalo parcels color-coded by year built](./scaled/year-built.png)
 
-## Most Recent Sale
+### Most Recent Sale
 ![Map of all buffalo parcels color-coded by recent sales](./scaled/last_sale_date.png)
+```
+mkgeo-render data/buffalo/oars/join9.ndjson   -f 'd.properties && d.properties.oars_props && d.properties.oars_props.last_sale.date'   -M mappers/choropleth.js   -d "{ f: function(d){ return new Date(Date.parse(d.properties.oars_props.last_sale.date)).getFullYear()}, colorScale: d3.scaleSequential(d3.interpolateGreens), minmax: $(echo -n '['; cat data/buffalo/oars/percentiles/last_sale_date.txt | cut -f 2 | tr '\n' ',' | sed 's|,$|]|') }"   --size 8000   -o output/buffalo-properties/last_sale_date
+```
 
-# Notable Classifications
-## Parcel Size heatmap
+## Notable Classifications
+### Parcel Size heatmap
 ![./lot_size.png](./scaled/lot_size.png)
 Multi-site properties (multiple buildings, not counting garages) (binary - blue/white, or bitmap/white for clickability)
 
@@ -64,15 +73,30 @@ non-house space on lot (percentage on a white to green scale)
 garage map
 map of houses w/more than 5br
 
-# TODO
+## TODO Future work
 * download extra sites for multi-site properties?
-* Weird straight lines on west side in bitmap map. Are these old right of ways that were later made properties?
+* Analyze weird straight lines on west side in bitmap map. Are these old right of ways that were later made properties?
+* Assessed price per lot sqft (total land assessment divided by acreage)
+* Assessment percentile relative to other properties with same use.
+
+categorical map with 1fa homes, schools and green space highlighted
+filter: categorical map with only 1fa homes, schools and greenspace
+* filter: min house br Count
+* score: house location based on total distance to 3 classes of space
+* score: house SIZE
+* score: bathroom Count
+* score: garage, porch, driveway, etc.
+* choropleth: acreage [0,0.05,0.1,0.2,0.4,0.8], sqft, acreage_minus_1st_flr_sqft
+* choropleth: mv$ per acre
+* choropleth: mv$ per bedroom
+
+other thoughts: property acreage slider
+last sale slider
+zip code filter
 
 ![./bitmap2.png](./scaled/bitmap2.png)
 
-
-
-### Issues
+## Issues
 
 ```
 2019-09-17 01:10:54 starting work on street #152: BROADWAY
