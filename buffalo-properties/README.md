@@ -95,6 +95,14 @@ other thoughts: property acreage slider
 last sale slider
 zip code filter
 
+TODO: how viewer should load
+/link/to/viewer
+  ?visible=use-categories.png image to view
+  &overlay=streets.png partially transparent layer that is displayed over the visible layer
+  &bitmap=bitmap.png underlying image that will provide click colors
+  &click=loadPropertyData bitmapClick is a function name that's called with the visible layer color AND optionally the bitmap color that is clicked on
+  &key=use-categories.key.png key to dock on bottom
+
 ![./bitmap2.png](./scaled/bitmap2.png)
 
 ## Issues
