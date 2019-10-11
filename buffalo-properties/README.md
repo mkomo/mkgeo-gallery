@@ -62,9 +62,16 @@ When all property types are added back to the picture, you get a better sense of
 mkgeo-render data/buffalo/oars/join9.ndjson   -f 'd.properties && d.properties.oars_props && d.properties.oars_props.last_sale.date'   -M mappers/choropleth.js   -d "{ f: function(d){ return new Date(Date.parse(d.properties.oars_props.last_sale.date)).getFullYear()}, colorScale: d3.scaleSequential(d3.interpolateGreens), minmax: $(echo -n '['; cat data/buffalo/oars/percentiles/last_sale_date.txt | cut -f 2 | tr '\n' ',' | sed 's|,$|]|') }"   --size 8000   -o output/buffalo-properties/last_sale_date
 ```
 
-## Notable Classifications
-### Parcel Size heatmap
-![./lot_size.png](./scaled/lot_size.png)
+## Other parcel features
+### Single Family Home Parcel Size heatmap
+![Single Family Home Parcel Size heatmap](./scaled/lot_size.png)
+
+## TODO Future work
+* download extra sites for multi-site properties?
+* Analyze weird straight lines on west side in bitmap map. Are these old right of ways that were later made properties?
+* Assessed price per lot sqft (total land assessment divided by acreage)
+* Assessment percentile relative to other properties with same use.
+
 Multi-site properties (multiple buildings, not counting garages) (binary - blue/white, or bitmap/white for clickability)
 
 Not owner occupied (owner 1 address different from property address)
@@ -72,12 +79,6 @@ Neighborhood codes (get key?)
 non-house space on lot (percentage on a white to green scale)
 garage map
 map of houses w/more than 5br
-
-## TODO Future work
-* download extra sites for multi-site properties?
-* Analyze weird straight lines on west side in bitmap map. Are these old right of ways that were later made properties?
-* Assessed price per lot sqft (total land assessment divided by acreage)
-* Assessment percentile relative to other properties with same use.
 
 categorical map with 1fa homes, schools and green space highlighted
 filter: categorical map with only 1fa homes, schools and greenspace
