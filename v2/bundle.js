@@ -44,31 +44,13 @@ TODO: how viewer should load
   &key=use-categories.key.png key to dock on bottom
 */
 
-
-// Start by creating the svg area
-// var svg = d3.select("#my_dataviz")
-//   .append("svg")
-//   .attr("width", 400)
-//   .attr("height", 400)
-
-// Append a circle
-// svg.append("circle")
-//   .attr("id", "circleBasicTooltip")
-//   .attr("cx", 150)
-//   .attr("cy", 200)
-//   .attr("r", 40)
-//   .attr("fill", "#69b3a2")
-
-// create a tooltip
-
-
-//
 const addTooltip = (svg, container = document.body) => {
   const tooltip = d3.select(container)
     .append("div")
       .style("position", "absolute")
       .style("visibility", "hidden")
-      .text("I'm a circle!");
+      .style("padding", "0.5em")
+      .style("background-color", "rgba(220,220,220,0.5)");
   const data = {};
   svg.on("mousemove", function(){
     const item = event.path[0];
@@ -89,7 +71,8 @@ const addTooltip = (svg, container = document.body) => {
 
 const extractItemData = (item, data) => {
   data.id = item && item.id;
-  data.fill = item && item.getAttribute('fill');
+  const {x,y,width,height} = item && item.getBBox() || {}
+  Object.assign(data, {x,y,width,height});
 }
 
 const updateTooltip = (tooltip, data, event) => {
@@ -98,8 +81,7 @@ const updateTooltip = (tooltip, data, event) => {
       .style("visibility", "visible")
       .style("top", (event.pageY)+"px")
       .style("left",(event.pageX)+"px")
-      .text(data.id);;
-    console.log(data);
+      .text(Object.values(data || {}).join(','));
   } else {
     console.log('');
     tooltip.style("visibility", "hidden");
