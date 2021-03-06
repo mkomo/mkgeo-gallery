@@ -2,19 +2,19 @@
 Buffalo provides great geospacial data through their [open data program](https://data.buffalony.gov/). But, as of this writing, the city does not have a facility to access property assessment data. Luckily, the city's [Online Assessment Role System (OARS)](https://buffalo.oarsystem.com/) provides a lot of tax, assessment and structure information. For this page, data was obtained from the **OARS** site in late 2018, then again in late 2019 after the city underwent a reassessment.
 
 ## Buffalo Parcels from Open Data Buffalo
-Here is a map of the raw parcel data obtained from data.buffalony.gov
-![Map of Parcels from Open Data Buffalo](./scaled-and-cropped/Green_Code_Zoning_2017_data.png)
+Here is a map of the raw parcel data obtained from [data.buffalony.gov](https://data.buffalony.gov/):
+![Map of Parcels from Open Data Buffalo](./Green_Code_Zoning_2017_data.png)
 
-And here's a map of those parcels color-coded based on the *use code* pulled from the **OARS** data
-![Map of all buffalo parcels color-coded by OARS use code](./scaled-and-cropped/use-categories.png)
+And here's a map of those parcels color-coded based on the *use code* pulled from the **OARS** data:
+![Map of all buffalo parcels color-coded by OARS use code](./use-categories.png)
 TODO (categorical legend with counts)
 
 Note some rights of way and various other parcels do not have **OARS** data associated with them:
-![Map of Open Data Buffalo Parcels without OARS Data](./scaled-and-cropped/no_oars_data.png)
+![Map of Open Data Buffalo Parcels without OARS Data](./no_oars_data.png)
 
 ## Single family homes: Assessed Value
 ### Assessed Fair Market Value for single family homes
-![Map of single family homes in Buffalo color-coded by Assessed price](./scaled-and-cropped/single-family-assessment.png)
+![Map of single family homes in Buffalo color-coded by Assessed price](./single-family-assessment.png)
 ```
 cat ./final1.ndjson | ndjson-filter 'd.properties && d.properties.oars_props && d.properties.oars_props.use == "210 - 1 Family Res"' | ndjson-map "parseFloat(d.properties.oars_props.assessment.fmv.replace(/[\$,]/g, ''))" | dtk quantile 100 | tee percentiles/single-family-assessment.txt
 
@@ -23,7 +23,7 @@ TODO (scale legend has counts)
 ```
 
 ### Assessed FMV per sqft for single family homes
-![Map of single family homes in Buffalo color-coded by Assessed price per square foot](./scaled-and-cropped/single-family-assessment-per-sqft.png)
+![Map of single family homes in Buffalo color-coded by Assessed price per square foot](./single-family-assessment-per-sqft.png)
 ```
 cat ./final1.ndjson | ndjson-filter 'd.properties && d.properties.oars_props && d.properties.oars_props.use == "210 - 1 Family Res"' | ndjson-map 'parseFloat(d.properties.oars_props.assessment.fmv.replace(/[\$,]/g, "")/d.properties.oars_props.structures[0].total_sqft)' | dtk quantile 100 | tee percentiles/single-family-assessment-per-sqft.txt
 
@@ -37,7 +37,7 @@ If you switch back and forth between these two photos, you notice that there are
 Buffalo underwent a city-wide reassessment in 2019. Ultimately, the total fair market value of all properties that we have data for went up 26.8% from $12,899,640,205.00 to $16,353,575,670.50. Of that total, single-family homes made up 29.5% of the total in the new assessment, going up by 20.3% from $4,013,993,150.82 to $4,827,295,224.66.
 
 This map shows the percent change in assessed value of single family homes.
-![Map of single family homes in Buffalo color-coded by percent change in assessed value](./scaled-and-cropped/single-family-assessment-change.png)
+![Map of single family homes in Buffalo color-coded by percent change in assessed value](./single-family-assessment-change.png)
 ```
 mkgeo-render data/buffalo/oars-2019/final1_assessment_history.ndjson -f 'd.properties && d.properties.oars_props && d.properties.oars_props.use == "210 - 1 Family Res" && d.properties.oars_props.assessment_2018.fmv && d.properties.oars_props.assessment.fmv' -M mappers/choropleth.js -d "{f: function(d){ return parseFloat(d.properties.oars_props.assessment.fmv.replace(/[\$,]/g, ''))/parseFloat(d.properties.oars_props.assessment_2018.fmv.replace(/[\$,]/g, ''))}, colorScale: d3.scaleSequential(d3.interpolateRdYlGn), minmax: [0.25,1,4]}" --size 8000 -o output/buffalo-properties/single-family-assessment-change
 ```
@@ -45,26 +45,26 @@ mkgeo-render data/buffalo/oars-2019/final1_assessment_history.ndjson -f 'd.prope
 When all property types are added back to the picture, you get a better sense of how (and where) things changed since the last reassessment.
 
 #### Relative (percent) Change
-![Map of all properties in Buffalo color-coded by percent change in assessed value](./scaled-and-cropped/all-property-assessment-change.png)
+![Map of all properties in Buffalo color-coded by percent change in assessed value](./all-property-assessment-change.png)
 
 #### Absolute (dollar amount) Change
-![Map of all properties in Buffalo color-coded by dollar amount change in assessed value](./scaled-and-cropped/all-property-assessment-change-abs.png)
+![Map of all properties in Buffalo color-coded by dollar amount change in assessed value](./all-property-assessment-change-abs.png)
 
 
 
 ## Historical heatmaps
 ### Year Built (red-yellow-green scale)
-![Map of all buffalo parcels color-coded by year built](./scaled-and-cropped/year-built.png)
+![Map of all buffalo parcels color-coded by year built](./year-built.png)
 
 ### Most Recent Sale
-![Map of all buffalo parcels color-coded by recent sales](./scaled-and-cropped/last_sale_date.png)
+![Map of all buffalo parcels color-coded by recent sales](./last_sale_date.png)
 ```
 mkgeo-render data/buffalo/oars/join9.ndjson   -f 'd.properties && d.properties.oars_props && d.properties.oars_props.last_sale.date'   -M mappers/choropleth.js   -d "{ f: function(d){ return new Date(Date.parse(d.properties.oars_props.last_sale.date)).getFullYear()}, colorScale: d3.scaleSequential(d3.interpolateGreens), minmax: $(echo -n '['; cat data/buffalo/oars/percentiles/last_sale_date.txt | cut -f 2 | tr '\n' ',' | sed 's|,$|]|') }"   --size 8000   -o output/buffalo-properties/last_sale_date
 ```
 
 ## Other parcel features
 ### Single Family Home Parcel Size heatmap
-![Single Family Home Parcel Size heatmap](./scaled-and-cropped/lot_size.png)
+![Single Family Home Parcel Size heatmap](./lot_size.png)
 
 ## TODO Future work
 * download extra sites for multi-site properties?
@@ -95,7 +95,7 @@ other thoughts: property acreage slider
 last sale slider
 zip code filter
 
-![./bitmap2.png](./scaled-and-cropped/bitmap2.png)
+![./bitmap.png](./bitmap.png)
 
 ## Issues
 
