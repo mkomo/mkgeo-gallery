@@ -9,6 +9,27 @@
     });
   }
 
+  const mountSvg = (data, title='map', container=d3.select('body').append('div')) => {
+    container.append('h1')
+      .style('position', "fixed")
+      .style('top', "10px")
+      .style('left', "10px")
+      .text(title);
+    container.node().append(data.documentElement);
+    const svg = container.select("svg");
+    const g = fitSvg(svg);
+
+    function zoomed({transform}) {
+      g.attr("transform", transform);
+    }
+
+    svg.call(d3.zoom()
+      .extent([[0, 0], [width, height]])
+      .on("zoom", zoomed));
+
+    return svg;
+  }
+
   const fitSvg = (svg) => {
     const g = svg.insert("g").attr("class", "wrapper")
     svg.selectAll("path").each(function() {
@@ -17,31 +38,11 @@
     });
 
     svg.attr("preserveAspectRatio", "xMinYMin meet");
-    svg.attr('width', null);
-    svg.attr('height', null);
-    svg.attr('viewBox',"-50 350 2100 1300");
+    svg.attr('width', width);
+    svg.attr('height', height);
     //TODO use to shrink svg down to change svg viewBox: g.node().getBBox();
 
     return g;
-  }
-
-  const mountSvg = (data, title='map', container=d3.select('body').append('div')) => {
-    container.append('h1').text(title);
-    container.node().append(data.documentElement);
-    const svg = container.select("svg");
-    const g = fitSvg(svg);
-    // svg.call(zoom);
-
-    function zoomed({transform}) {
-      g.attr("transform", transform);
-    }
-
-    svg.call(d3.zoom()
-      .extent([[0, 0], [width, height]])
-      .scaleExtent([1, 8])
-      .on("zoom", zoomed));
-
-    return svg;
   }
 
   /*
