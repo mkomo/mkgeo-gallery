@@ -1,4 +1,3 @@
-
 "use strict";
 
 const width = window.innerWidth, height = window.innerHeight;
@@ -113,4 +112,4 @@ const updateTooltip = (tooltip, data, event) => {
   }
 }
 
-mount("/covid/deaths-09-20.svg", 'deaths as of 9/20');
+export { mount };
