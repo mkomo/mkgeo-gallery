@@ -17,11 +17,19 @@ const addZoomableImageTagToContainer = ({container, imageSrc, pixelated = false,
   container.call(d3.zoom()
     .extent([[0, 0], [width, height]])
     .on("zoom", ({transform}) => {
-      console.log('zoom!', debugRound(transform.k), debugRound(transform.x), debugRound(transform.y));
       viz.style("transform", "translate(" + transform.x + "px," + transform.y + "px) scale(" + transform.k + ")");
       viz.style("transform-origin", "0 0")
     }));
   return viz;
+}
+
+const addInfoContainer = ({container, title}) => {
+  container.append('div')
+    .text(title)
+    .style('position','absolute')
+    .style('z-index','10')
+    .style('top', '10px')
+    .style('left', '10px')
 }
 
 export const bitmap = ({
@@ -34,12 +42,21 @@ export const bitmap = ({
   size = SIZE.CONTAIN,
   position = POSITION.CENTER,
   repeat = REPEAT.NO_REPEAT,
-  container = d3.select('body'),
+  title = 'test title',
   width = window.innerWidth,
-  height = window.innerHeight
+  height = window.innerHeight,
+  container = d3.select('body').append('div')
+    .style('position','fixed')
+    .style('width', width)
+    .style('height', height),
+  bgColor = '#eee'
 }) => {
   console.log('drawing bitmap', visibleImage, bitmapImage);
-  container.style('background-color', '#999')
+  container
+    .style('background-color', bgColor)
+    .style('position', 'relative');
+
+  addInfoContainer({container, title});
 
   addZoomableImageTagToContainer({container, imageSrc: visibleImage, pixelated: true, width, height})
 }
