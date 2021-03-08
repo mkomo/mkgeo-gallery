@@ -71,14 +71,12 @@ export const bitmap = ({
     .style('background-color', bgColor)
     .style('position', 'relative');
 
-  const image = addZoomableImageTagToContainer({container, imageSrc: visibleImage, pixelated: true, width, height})
+  const image = addZoomableImageTagToContainer({container, imageSrc: visibleImage, pixelated: true, width, height});
   const bitmapCanvas = loadBitmap(bitmapImageUrl);
   const bitmapContext = bitmapCanvas.node().getContext("2d");
-  const infobox = addInfoContainer({container, title});
+  const infoBox = addInfoContainer({container, title});
 
-
-  image.on('click', function(event) {
-    // const bitmapWidth
+  image.on('click', (event) => {
     const imageWidth = image.node().naturalWidth,
       imageHeight = image.node().naturalHeight,
       bitmapWidth = bitmapCanvas.attr('width'),
@@ -89,7 +87,6 @@ export const bitmap = ({
       //TODO error out
     }
     const bitmapData = bitmapContext.getImageData(event.offsetX * scaling,event.offsetY * scaling,1,1).data;
-    console.log('click!', ['offsetX', 'offsetY'].map(key=>event[key]), bitmapData);
-
+    onClick(bitmapData, infoBox);
   });
 }
