@@ -26,10 +26,7 @@ const addZoomableImageTagToContainer = ({container, imageSrc, pixelated = false,
 const addInfoContainer = ({container, title}) => {
   return container.append('div')
     .text(title)
-    .style('position','absolute')
-    .style('z-index','10')
-    .style('top', '10px')
-    .style('left', '10px')
+    .attr('class', 'info-box');
 }
 
 const loadBitmap = bitmapImageUrl => {
@@ -46,6 +43,19 @@ const loadBitmap = bitmapImageUrl => {
   bitmapImage.src = bitmapImageUrl;
   return canvas;
 }
+
+const readBitmapData = ({event, image, bitmapCanvas, bitmapContext}) => {
+  const imageWidth = image.node().naturalWidth,
+  imageHeight = image.node().naturalHeight,
+  bitmapWidth = bitmapCanvas.attr('width'),
+  bitmapHeight = bitmapCanvas.attr('height'),
+  scaling = bitmapHeight / imageHeight;
+  if (Math.abs(scaling - bitmapHeight/imageHeight) > Number.EPSILON) {
+    console.error('bitmap does not match image aspect ratio. image:', imageWidth, imageHeight,'bitmap:', bitmapWidth, bitmapHeight);
+    //TODO error out
+  }
+  return bitmapContext.getImageData(event.offsetX * scaling,event.offsetY * scaling,1,1).data;
+};
 
 export const bitmap = ({
   visibleImage, // TODO, handle this as a canvas, svg, etc.
@@ -77,16 +87,11 @@ export const bitmap = ({
   const infoBox = addInfoContainer({container, title});
 
   image.on('click', (event) => {
-    const imageWidth = image.node().naturalWidth,
-      imageHeight = image.node().naturalHeight,
-      bitmapWidth = bitmapCanvas.attr('width'),
-      bitmapHeight = bitmapCanvas.attr('height'),
-      scaling = bitmapHeight / imageHeight;
-    if (Math.abs(scaling - bitmapHeight/imageHeight) > Number.EPSILON) {
-      console.error('bitmap does not match image aspect ratio. image:', imageWidth, imageHeight,'bitmap:', bitmapWidth, bitmapHeight);
-      //TODO error out
-    }
-    const bitmapData = bitmapContext.getImageData(event.offsetX * scaling,event.offsetY * scaling,1,1).data;
+    const bitmapData = readBitmapData({event, image, bitmapCanvas, bitmapContext});
     onClick(bitmapData, infoBox);
+  });
+  image.on('mousemove', (event) => {
+    const bitmapData = readBitmapData({event, image, bitmapCanvas, bitmapContext});
+    onHover(bitmapData, infoBox);
   });
 }

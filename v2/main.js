@@ -11,5 +11,15 @@ bitmap({
       bitmapData[1].toString(16).padStart(2, '0') +
       bitmapData[2].toString(16).padStart(2, '0')).replace(/^0+/, '');
     console.log('click!', propertyId, ['offsetX', 'offsetY'].map(key=>event[key]), bitmapData);
+  },
+  onHover: (bitmapData, infoBox) => {
+    if (bitmapData[0] == 255 && bitmapData[1] == 255 && bitmapData[2] == 255) {
+      infoBox.text('none');
+    } else {
+      const propertyId = (bitmapData[0].toString(16) +
+        bitmapData[1].toString(16).padStart(2, '0') +
+        bitmapData[2].toString(16).padStart(2, '0')).replace(/^0+/, '');
+      infoBox.text(propertyId);
+    }
   }
-})
+});
