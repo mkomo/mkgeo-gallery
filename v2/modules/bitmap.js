@@ -10,15 +10,41 @@ export const POSITION = {
 
 const debugRound = (val, factor = 2) => Math.round(val * Math.pow(10, factor))/Math.pow(10, factor);
 
-const addZoomableImageTagToContainer = ({container, imageSrc, pixelated = false, width, height}) => {
+const getInitialTransform = ({image, width, height, size, position}) => {
+  if (size === SIZE.CONTAIN) {
+    const naturalHeight = image.naturalHeight, naturalWidth = image.naturalWidth;
+    let k = Math.min(height/naturalHeight, width/naturalWidth), x = 0, y = 0;
+    if (position === POSITION.CENTER) {
+      if (height/naturalHeight < width/naturalWidth) {
+        x = (width - naturalWidth * k)/2;
+      } else {
+        y = (height - naturalHeight * k)/2;
+      }
+    }
+    return { x, y, k };
+  }
+  return { x: 0, y: 0, k: 1 };
+}
+
+const transformImage = ({viz, transform}) => {
+  viz.style("transform", "translate(" + transform.x + "px," + transform.y + "px) scale(" + transform.k + ")");
+  viz.style("transform-origin", "0 0")
+}
+
+const addZoomableImageTagToContainer = ({container, imageSrc, pixelated = false, width, height, size, position}) => {
   let viz = container.append('img')
-    .attr('src', imageSrc);
+    .attr('src', imageSrc)
+    .style('display', 'none')
+    .on('load', function(a) {
+      console.log('visible image loaded', this, this.naturalHeight, this.naturalWidth, a, viz);
+      transformImage({viz, transform: getInitialTransform({image: this, width, height, size, position})});
+      viz.style('display', 'block');
+    });
   pixelated && viz.style('image-rendering', 'pixelated');
   container.call(d3.zoom()
     .extent([[0, 0], [width, height]])
     .on("zoom", ({transform}) => {
-      viz.style("transform", "translate(" + transform.x + "px," + transform.y + "px) scale(" + transform.k + ")");
-      viz.style("transform-origin", "0 0")
+      transformImage({viz, transform})
     }));
   return viz;
 }
@@ -65,7 +91,7 @@ export const bitmap = ({
   onClick = ()=>{},
   size = SIZE.CONTAIN,
   position = POSITION.CENTER,
-  repeat = REPEAT.NO_REPEAT,
+  // repeat = REPEAT.NO_REPEAT, // TODO handle this
   title = 'test title',
   width = window.innerWidth,
   height = window.innerHeight,
@@ -81,7 +107,7 @@ export const bitmap = ({
     .style('background-color', bgColor)
     .style('position', 'relative');
 
-  const image = addZoomableImageTagToContainer({container, imageSrc: visibleImage, pixelated: true, width, height});
+  const image = addZoomableImageTagToContainer({container, imageSrc: visibleImage, pixelated: true, width, height, size, position});
   const bitmapCanvas = loadBitmap(bitmapImageUrl);
   const bitmapContext = bitmapCanvas.node().getContext("2d");
   const infoBox = addInfoContainer({container, title});
