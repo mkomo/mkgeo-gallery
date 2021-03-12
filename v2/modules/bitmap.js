@@ -21,31 +21,33 @@ const getInitialTransform = ({image, width, height, size, position}) => {
         y = (height - naturalHeight * k)/2;
       }
     }
-    return { x, y, k };
+    return d3.zoomIdentity.translate(x, y).scale(k);
   }
-  return { x: 0, y: 0, k: 1 };
+  return d3.zoomIdentity;
 }
 
 const transformImage = ({viz, transform}) => {
   viz.style("transform", "translate(" + transform.x + "px," + transform.y + "px) scale(" + transform.k + ")");
-  viz.style("transform-origin", "0 0")
 }
 
 const addZoomableImageTagToContainer = ({container, imageSrc, pixelated = false, width, height, size, position}) => {
-  let viz = container.append('img')
-    .attr('src', imageSrc)
-    .style('display', 'none')
-    .on('load', function(a) {
-      console.log('visible image loaded', this, this.naturalHeight, this.naturalWidth, a, viz);
-      transformImage({viz, transform: getInitialTransform({image: this, width, height, size, position})});
-      viz.style('display', 'block');
-    });
-  pixelated && viz.style('image-rendering', 'pixelated');
-  container.call(d3.zoom()
+  const zoom = d3.zoom()
     .extent([[0, 0], [width, height]])
     .on("zoom", ({transform}) => {
       transformImage({viz, transform})
-    }));
+    });
+  let viz = container.append('img')
+    .attr('src', imageSrc)
+    .style('display', 'none')
+    .style("transform-origin", "0 0")
+    .on('load', function(a) {
+      let initialTransform = getInitialTransform({image: this, width, height, size, position})
+      console.log('visible image loaded', this, this.naturalHeight, this.naturalWidth, initialTransform, a, viz);
+      container.call(zoom.transform, initialTransform);
+      viz.style('display', 'block');
+    });
+  pixelated && viz.style('image-rendering', 'pixelated');
+  container.call(zoom);
   return viz;
 }
 
