@@ -1,3 +1,5 @@
+import { parseCss } from "../node_modules/d3-interpolate/src/transform/parse.js";
+
 export const REPEAT = {
   NO_REPEAT: 'no-repeat'
 };
@@ -77,16 +79,20 @@ const loadBitmap = bitmapImageUrl => {
 
 const readBitmapData = ({event, image, bitmapCanvas, bitmapContext}) => {
   //TODO read a more precise pixel (the event offsets are rounded to the nearest whole number)
+
   const imageWidth = image.attr('width'),
-  imageHeight = image.attr('height'),
-  bitmapWidth = bitmapCanvas.attr('width'),
-  bitmapHeight = bitmapCanvas.attr('height'),
-  scaling = bitmapHeight / imageHeight;
+    imageHeight = image.attr('height'),
+    bitmapWidth = bitmapCanvas.attr('width'),
+    bitmapHeight = bitmapCanvas.attr('height'),
+    scaling = bitmapHeight / imageHeight,
+    imageTransform = parseCss(image.style('transform'));
   if (Math.abs(scaling - bitmapHeight/imageHeight) > Number.EPSILON) {
     console.error('bitmap does not match image aspect ratio. image:', imageWidth, imageHeight,'bitmap:', bitmapWidth, bitmapHeight);
     //TODO error out
   }
-  return bitmapContext.getImageData(event.offsetX * scaling,event.offsetY * scaling,1,1).data;
+  const imageOffsetX = (event.x - imageTransform.translateX) * scaling / imageTransform.scaleX,
+    imageOffsetY = (event.y - imageTransform.translateY) * scaling / imageTransform.scaleY;
+  return bitmapContext.getImageData(Math.floor(imageOffsetX),Math.floor(imageOffsetY),1,1).data;
 };
 
 export const bitmap = ({
