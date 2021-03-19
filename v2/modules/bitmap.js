@@ -31,24 +31,27 @@ const transformImage = ({viz, transform}) => {
 }
 
 const addZoomableImageTagToContainer = ({container, imageSrc, pixelated = false, width, height, size, position}) => {
+  const canvas = container.append('canvas')
+      .style('display', 'none')
+      .style("transform-origin", "0 0"),
+    image = new Image();
+  image.onload = () => {
+    container.call(zoom.transform, getInitialTransform({image, width, height, size, position}));
+    canvas
+      .attr('width', image.width)
+      .attr('height', image.height);
+    canvas.node().getContext("2d").drawImage(image, 0, 0);
+    canvas.style('display', 'block');
+  };
+  image.src = imageSrc;
   const zoom = d3.zoom()
     .extent([[0, 0], [width, height]])
     .on("zoom", ({transform}) => {
-      transformImage({viz, transform})
+      transformImage({viz: canvas, transform})
     });
-  let viz = container.append('img')
-    .attr('src', imageSrc)
-    .style('display', 'none')
-    .style("transform-origin", "0 0")
-    .on('load', function(a) {
-      let initialTransform = getInitialTransform({image: this, width, height, size, position})
-      console.log('visible image loaded', this, this.naturalHeight, this.naturalWidth, initialTransform, a, viz);
-      container.call(zoom.transform, initialTransform);
-      viz.style('display', 'block');
-    });
-  pixelated && viz.style('image-rendering', 'pixelated');
+  pixelated && canvas.style('image-rendering', 'pixelated');
   container.call(zoom);
-  return viz;
+  return canvas;
 }
 
 const addInfoContainer = ({container, title}) => {
@@ -62,10 +65,10 @@ const loadBitmap = bitmapImageUrl => {
     context = canvas.node().getContext("2d"),
     bitmapImage = new Image();
 
-  bitmapImage.onload = function() {
+  bitmapImage.onload = () => {
     canvas
-      .attr('width', this.width)
-      .attr('height', this.height);
+      .attr('width', bitmapImage.width)
+      .attr('height', bitmapImage.height);
     context.drawImage(bitmapImage, 0, 0);
   };
   bitmapImage.src = bitmapImageUrl;
@@ -73,8 +76,9 @@ const loadBitmap = bitmapImageUrl => {
 }
 
 const readBitmapData = ({event, image, bitmapCanvas, bitmapContext}) => {
-  const imageWidth = image.node().naturalWidth,
-  imageHeight = image.node().naturalHeight,
+  //TODO read a more precise pixel (the event offsets are rounded to the nearest whole number)
+  const imageWidth = image.attr('width'),
+  imageHeight = image.attr('height'),
   bitmapWidth = bitmapCanvas.attr('width'),
   bitmapHeight = bitmapCanvas.attr('height'),
   scaling = bitmapHeight / imageHeight;
@@ -86,14 +90,14 @@ const readBitmapData = ({event, image, bitmapCanvas, bitmapContext}) => {
 };
 
 export const bitmap = ({
-  visibleImage, // TODO, handle this as a canvas, svg, etc.
+  visibleImage, // TODO, handle as a canvas, svg, etc.
   bitmapImageUrl,
   bitmapBoundingBox, // TODO treat these as coords that correspond to [[0,0],[width,height]] of visible image
   onHover = ()=>{},
   onClick = ()=>{},
   size = SIZE.CONTAIN,
   position = POSITION.CENTER,
-  // repeat = REPEAT.NO_REPEAT, // TODO handle this
+  // repeat = REPEAT.NO_REPEAT, // TODO handle repeat options
   title = 'test title',
   width = window.innerWidth,
   height = window.innerHeight,
