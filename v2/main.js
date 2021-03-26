@@ -2,12 +2,13 @@ import { mount } from './modules/zoom-basic.js'
 import { bitmap } from './modules/bitmap.js'
 
 const urlParams = new URLSearchParams(window.location.search);
-const map = urlParams.get('map');
+const map = urlParams.get('map'),
+  visibleImage = urlParams.get('visible');
 
 if (map === 'covid') {
   mount("/covid/deaths-09-20.svg", 'deaths as of 9/20');
 } else if (map === 'buffalo') {
-  bitmap({
+  const props = {
     bitmapImageUrl: '../buffalo-properties/bitmap.png',
     visibleImage: '../buffalo-properties/single-family-assessment-per-sqft.png',
     onClick: (bitmapData, infoBox) => {
@@ -26,7 +27,13 @@ if (map === 'covid') {
         infoBox.text(propertyId);
       }
     }
-  });
+  };
+
+  if (visibleImage) {
+    props.visibleImage = `../${visibleImage}.png`;
+  }
+
+  bitmap(props);
 } else if (map === 'zips') {
   let {
     getStateDetailFromColor,
@@ -36,7 +43,7 @@ if (map === 'covid') {
     explainGeoColor,
   } = zipbitmap(null, true);
 
-  bitmap({
+  const props = {
     bitmapImageUrl: '../zipbitmap/multi-state-zips-4x.png',
     visibleImage: '../zipbitmap/multi-state-zips-4x.png',
     onClick: (bitmapData, infoBox) => {
@@ -56,5 +63,11 @@ if (map === 'covid') {
         infoBox.text(output.join('\n'));
       }
     }
-  });
+  };
+
+  if (visibleImage) {
+    props.visibleImage = `../${visibleImage}.png`;
+  }
+
+  bitmap(props);
 }

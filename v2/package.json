@@ -1,13 +1,13 @@
 {
   "name": "mkgeo-viewer",
   "version": "1.0.0",
+  "description": "A tool for linking a zoomable image, svg, or canvas with an underlying bitmap so that geographic data can be displayed on complex maps in a lightweight way",
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Matthew Komorowski <matt@mkomo.com>",
   "license": "MIT",
-  "description": "",
   "dependencies": {
     "d3": "^6.6.0"
   }

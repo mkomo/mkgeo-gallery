@@ -77,7 +77,7 @@ const loadBitmap = bitmapImageUrl => {
   return canvas;
 }
 
-const readBitmapData = ({event, image, bitmapCanvas, bitmapContext}) => {
+const readBitmapData = ({ event: {x, y}, image, bitmapCanvas, bitmapContext}) => {
   //TODO read a more precise pixel (the event offsets are rounded to the nearest whole number)
 
   const imageWidth = image.attr('width'),
@@ -90,8 +90,8 @@ const readBitmapData = ({event, image, bitmapCanvas, bitmapContext}) => {
     console.error('bitmap does not match image aspect ratio. image:', imageWidth, imageHeight,'bitmap:', bitmapWidth, bitmapHeight);
     //TODO error out
   }
-  const imageOffsetX = (event.x - imageTransform.translateX) * scaling / imageTransform.scaleX,
-    imageOffsetY = (event.y - imageTransform.translateY) * scaling / imageTransform.scaleY;
+  const imageOffsetX = (x - imageTransform.translateX) * scaling / imageTransform.scaleX,
+    imageOffsetY = (y - imageTransform.translateY) * scaling / imageTransform.scaleY;
   return bitmapContext.getImageData(Math.floor(imageOffsetX),Math.floor(imageOffsetY),1,1).data;
 };
 
@@ -114,7 +114,6 @@ export const bitmap = ({
     .style('overflow', 'hidden'),
   bgColor = '#eee'
 }) => {
-  console.log('drawing image', visibleImage, bitmapImageUrl);
   container
     .style('background-color', bgColor)
     .style('position', 'relative');
