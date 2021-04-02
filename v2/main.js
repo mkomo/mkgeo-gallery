@@ -11,13 +11,13 @@ if (map === 'covid') {
   const props = {
     bitmapImageUrl: '../buffalo-properties/bitmap.png',
     visibleImage: '../buffalo-properties/single-family-assessment-per-sqft.png',
-    onClick: (bitmapData, infoBox) => {
+    onClick: (bitmapData, imageData, infoBox) => {
       const propertyId = (bitmapData[0].toString(16) +
         bitmapData[1].toString(16).padStart(2, '0') +
         bitmapData[2].toString(16).padStart(2, '0')).replace(/^0+/, '');
       console.log('click!', propertyId, ['offsetX', 'offsetY'].map(key=>event[key]), bitmapData);
     },
-    onHover: (bitmapData, infoBox) => {
+    onHover: (bitmapData, imageData, infoBox) => {
       if (bitmapData[0] == 255 && bitmapData[1] == 255 && bitmapData[2] == 255) {
         infoBox.text('none');
       } else {
@@ -46,9 +46,9 @@ if (map === 'covid') {
   const props = {
     bitmapImageUrl: '../zipbitmap/multi-state-zips-4x.png',
     visibleImage: '../zipbitmap/multi-state-zips-4x.png',
-    onClick: (bitmapData, infoBox) => {
+    onClick: (bitmapData, imageData, infoBox, {image, event, width, height, bitmapCanvas, bitmapContext}) => {
     },
-    onHover: (bitmapData, infoBox) => {
+    onHover: (bitmapData, imageData, infoBox) => {
       if (bitmapData[0] == 255 && bitmapData[1] == 255 && bitmapData[2] == 255) {
         infoBox.text('none');
       } else {
@@ -60,7 +60,8 @@ if (map === 'covid') {
         output.push(getZipDetailFromColor(bitmapData));
         output.push(explainGeoColor(bitmapData));
         output.push("color: " + bitmapData);
-        infoBox.text(output.join('\n'));
+        output.push("image: " + imageData);
+        infoBox.html(`<pre>${output.join('\n')}</pre>`);
       }
     }
   };

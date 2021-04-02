@@ -78,8 +78,6 @@ const loadBitmap = bitmapImageUrl => {
 }
 
 const readBitmapData = ({ event: {x, y}, image, bitmapCanvas, bitmapContext}) => {
-  //TODO read a more precise pixel (the event offsets are rounded to the nearest whole number)
-
   const imageWidth = image.attr('width'),
     imageHeight = image.attr('height'),
     bitmapWidth = bitmapCanvas.attr('width'),
@@ -93,6 +91,14 @@ const readBitmapData = ({ event: {x, y}, image, bitmapCanvas, bitmapContext}) =>
   const imageOffsetX = (x - imageTransform.translateX) * scaling / imageTransform.scaleX,
     imageOffsetY = (y - imageTransform.translateY) * scaling / imageTransform.scaleY;
   return bitmapContext.getImageData(Math.floor(imageOffsetX),Math.floor(imageOffsetY),1,1).data;
+};
+
+const readImageData = ({ event: {x, y}, image}) => {
+  const imageContext = image.node().getContext("2d"),
+    imageTransform = parseCss(image.style('transform')),
+    imageOffsetX = (x - imageTransform.translateX) / imageTransform.scaleX,
+    imageOffsetY = (y - imageTransform.translateY) / imageTransform.scaleY;
+  return imageContext.getImageData(Math.floor(imageOffsetX),Math.floor(imageOffsetY),1,1).data;
 };
 
 export const bitmap = ({
@@ -124,11 +130,13 @@ export const bitmap = ({
   const infoBox = addInfoContainer({container, title});
 
   image.on('click', (event) => {
-    const bitmapData = readBitmapData({event, image, bitmapCanvas, bitmapContext});
-    onClick(bitmapData, infoBox);
+    const bitmapData = readBitmapData({event, image, bitmapCanvas, bitmapContext}),
+      imageData = readImageData({event, image});
+    onClick(bitmapData, imageData, infoBox, {image, event, width, height, bitmapCanvas, bitmapContext});
   });
   image.on('mousemove', (event) => {
-    const bitmapData = readBitmapData({event, image, bitmapCanvas, bitmapContext});
-    onHover(bitmapData, infoBox);
+    const bitmapData = readBitmapData({event, image, bitmapCanvas, bitmapContext}),
+      imageData = readImageData({event, image});
+    onHover(bitmapData, imageData, infoBox);
   });
 }
