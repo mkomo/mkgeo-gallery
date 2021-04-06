@@ -1,6 +1,32 @@
 import { mount } from './modules/zoom-basic.js'
 import { bitmap } from './modules/bitmap.js'
 
+// This import is handled differently because it comes from a file that has to be formatted for mkgeo-render mapping
+let {
+  getStateDetailFromColor,
+  getStateFromColor,
+  getZipDetailFromColor,
+  getZipFromColor,
+  explainGeoColor,
+} = zipbitmap(null, true);
+
+const hoverBitmap = (bitmapData, imageData, infoBox) => {
+  if (bitmapData[0] == 255 && bitmapData[1] == 255 && bitmapData[2] == 255) {
+    infoBox.text('none');
+  } else {
+    let output = [];
+    let state = getStateFromColor(bitmapData)
+    let zip = getZipFromColor(bitmapData)
+    output.push(`${zip}, ${state}`);
+    // output.push(getStateDetailFromColor(bitmapData));
+    // output.push(getZipDetailFromColor(bitmapData));
+    // output.push(explainGeoColor(bitmapData));
+    output.push("color: " + bitmapData);
+    output.push("image: " + imageData);
+    infoBox.html(`<pre>${output.join('\n')}</pre>`);
+  }
+}
+
 const urlParams = new URLSearchParams(window.location.search);
 const map = urlParams.get('map'),
   visibleImage = urlParams.get('visible');
@@ -9,7 +35,7 @@ if (map === 'covid') {
   mount("/covid/deaths-09-20.svg", 'deaths as of 9/20');
 } else if (map === 'buffalo') {
   const props = {
-    bitmapImageUrl: '../buffalo-properties/bitmap.png',
+    bitmapImage: '../buffalo-properties/bitmap.png',
     visibleImage: '../buffalo-properties/single-family-assessment-per-sqft.png',
     onClick: (bitmapData, imageData, infoBox) => {
       const propertyId = (bitmapData[0].toString(16) +
@@ -35,35 +61,25 @@ if (map === 'covid') {
 
   bitmap(props);
 } else if (map === 'zips') {
-  let {
-    getStateDetailFromColor,
-    getStateFromColor,
-    getZipDetailFromColor,
-    getZipFromColor,
-    explainGeoColor,
-  } = zipbitmap(null, true);
+  /*
+  determine how many colors are in each scale
+  do colors in mkgeo-render by percentile or half-percentile (if there are 200 colors)
+  add info to infobox about top color
+  flip high and low bits in bitmaps
+  format info box
+
+  zcta
+  county
+  congress
+  state
+   */
 
   const props = {
-    bitmapImageUrl: '../zipbitmap/multi-state-zips-4x.png',
+    bitmapImage: '../zipbitmap/multi-state-zips-4x.png',
     visibleImage: '../zipbitmap/multi-state-zips-4x.png',
     onClick: (bitmapData, imageData, infoBox, {image, event, width, height, bitmapCanvas, bitmapContext}) => {
     },
-    onHover: (bitmapData, imageData, infoBox) => {
-      if (bitmapData[0] == 255 && bitmapData[1] == 255 && bitmapData[2] == 255) {
-        infoBox.text('none');
-      } else {
-        let output = [];
-        let state = getStateFromColor(bitmapData)
-        let zip = getZipFromColor(bitmapData)
-        output.push(`${zip}, ${state}`);
-        output.push(getStateDetailFromColor(bitmapData));
-        output.push(getZipDetailFromColor(bitmapData));
-        output.push(explainGeoColor(bitmapData));
-        output.push("color: " + bitmapData);
-        output.push("image: " + imageData);
-        infoBox.html(`<pre>${output.join('\n')}</pre>`);
-      }
-    }
+    onHover: hoverBitmap
   };
 
   if (visibleImage) {
@@ -71,4 +87,27 @@ if (map === 'covid') {
   }
 
   bitmap(props);
+} else {
+  const views = {
+    "pop-density-zip": {
+      "displayName": "ZCTA Population Density",
+      "bitmapImage": "../zipbitmap/multi-state-zips-4x.png",
+      "visibleImage": "../choropleth/zip-pop-density.1.png"
+    },
+    "pop-density-county": {
+      "displayName": "County Population Density",
+      "bitmapImage": "../bitmapus/county.png",
+      "visibleImage": "../choropleth/county-pop-density.png"
+    },
+    "pop-density-state": {
+      "displayName": "State Population Density",
+      "bitmapImage": "../bitmapus/state.png",
+      "visibleImage": "../choropleth/state-pop-density.1.png"
+    },
+  }
+  const view = urlParams.get('view');
+  if (view in views) {
+    bitmap(Object.assign({ onHover: hoverBitmap }, views[view]));
+  }
 }
+

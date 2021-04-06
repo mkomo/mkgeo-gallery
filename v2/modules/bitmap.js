@@ -56,13 +56,13 @@ const addZoomableImageTagToContainer = ({container, imageSrc, pixelated = false,
   return canvas;
 }
 
-const addInfoContainer = ({container, title}) => {
+const addInfoContainer = ({container, displayName}) => {
   return container.append('div')
-    .text(title)
+    .text(displayName)
     .attr('class', 'info-box');
 }
 
-const loadBitmap = bitmapImageUrl => {
+const loadBitmap = url => {
   const canvas = d3.select('body').append('canvas').style('display', 'none'),
     context = canvas.node().getContext("2d"),
     bitmapImage = new Image();
@@ -73,7 +73,7 @@ const loadBitmap = bitmapImageUrl => {
       .attr('height', bitmapImage.height);
     context.drawImage(bitmapImage, 0, 0);
   };
-  bitmapImage.src = bitmapImageUrl;
+  bitmapImage.src = url;
   return canvas;
 }
 
@@ -103,14 +103,14 @@ const readImageData = ({ event: {x, y}, image}) => {
 
 export const bitmap = ({
   visibleImage, // TODO, handle as a canvas, svg, etc.
-  bitmapImageUrl,
+  bitmapImage,
   bitmapBoundingBox, // TODO treat these as coords that correspond to [[0,0],[width,height]] of visible image
   onHover = ()=>{},
   onClick = ()=>{},
   size = SIZE.CONTAIN,
   position = POSITION.CENTER,
   // repeat = REPEAT.NO_REPEAT, // TODO handle repeat options
-  title = 'test title',
+  displayName = '',
   width = window.innerWidth,
   height = window.innerHeight,
   container = d3.select('body').append('div')
@@ -125,9 +125,9 @@ export const bitmap = ({
     .style('position', 'relative');
 
   const image = addZoomableImageTagToContainer({container, imageSrc: visibleImage, pixelated: true, width, height, size, position});
-  const bitmapCanvas = loadBitmap(bitmapImageUrl);
+  const bitmapCanvas = loadBitmap(bitmapImage);
   const bitmapContext = bitmapCanvas.node().getContext("2d");
-  const infoBox = addInfoContainer({container, title});
+  const infoBox = addInfoContainer({container, displayName});
 
   image.on('click', (event) => {
     const bitmapData = readBitmapData({event, image, bitmapCanvas, bitmapContext}),
