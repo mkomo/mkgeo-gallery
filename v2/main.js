@@ -40,7 +40,7 @@ const map = urlParams.get('map'),
   visibleImage = urlParams.get('visible');
 
 if (map === 'covid') {
-  mount("/covid/deaths-09-20.svg", 'deaths as of 9/20');
+  mount('/covid/deaths-09-20.svg', 'deaths as of 9/20');
 } else if (map === 'buffalo') {
   const props = {
     bitmapImage: '../buffalo-properties/bitmap.png',
@@ -97,28 +97,33 @@ if (map === 'covid') {
   bitmap(props);
 } else {
   const views = {
-    "pop-density-zip": {
-      "displayName": "ZCTA Population Density",
-      "bitmapImage": "../zipbitmap/multi-state-zips-4x.png",
-      "visibleImage": "../choropleth/zip-pop-density.1.png"
+    'pop-density-zip': {
+      'displayName': 'ZCTA Population Density',
+      'bitmapImage': '../zipbitmap/multi-state-zips-4x.png',
+      'visibleImage': '../choropleth/zip-pop-density.1.png'
     },
-    "pop-density-county": {
-      "displayName": "County Population Density",
-      "bitmapImage": "../bitmapus/county.png",
-      "bitmapKey": "../bitmapus/county.data.json",
-      "visibleImage": "../choropleth/county-pop-density.png"
+    'pop-density-county': {
+      'displayName': 'County Population Density',
+      'bitmapImage': '../bitmapus/county.png',
+      'bitmapKey': '../bitmapus/county.data.json',
+      'visibleImage': '../choropleth/county-pop-density.png'
     },
-    "pop-density-state": {
-      "displayName": "State Population Density",
-      "bitmapImage": "../bitmapus/state.png",
-      "visibleImage": "../choropleth/state-pop-density.1.png"
+    'pop-density-state': {
+      'displayName': 'State Population Density',
+      'bitmapImage': '../bitmapus/state.png',
+      'visibleImage': '../choropleth/state-pop-density.1.png'
     },
+    'buffalo/use': {
+      'displayName': 'Buffalo Property Uses',
+      'bitmapImage': '../buffalo-properties/bitmap.png',
+      'visibleImage': '../buffalo-properties/use-categories.png',
+    }
   }
   const viewName = urlParams.get('view');
   if (viewName in views) {
     const view = views[viewName];
-    if ("bitmapKey" in view) {
-      fetch(view["bitmapKey"])
+    if ('bitmapKey' in view) {
+      fetch(view['bitmapKey'])
         .then(response => response.json())
         .then(data => {
           bitmap(Object.assign({ onHover: hoverBitmap.withKey(data) }, view));
