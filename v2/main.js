@@ -2,37 +2,37 @@ import { mount } from './modules/zoom-basic.js'
 import { bitmap } from './modules/bitmap.js'
 
 // This import is handled differently because it comes from a file that has to be formatted for mkgeo-render mapping
-let {
-  getStateDetailFromColor,
-  getStateFromColor,
-  getZipDetailFromColor,
-  getZipFromColor,
-  explainGeoColor,
+const {
+  getLabelFromColor,
+  getZipFromColor
 } = zipbitmap(null, true);
 
-const hoverBitmap = (bitmapData, imageData, infoBox, keyData) => {
+const idFuncs = {
+  'buffalo': bitmapData => (bitmapData[0].toString(16) +
+    bitmapData[1].toString(16).padStart(2, '0') +
+    bitmapData[2].toString(16).padStart(2, '0')).replace(/^0+/, '')
+}
+
+const hoverBitmap = ({bitmapData, imageData, infoBox, keyData, idFunc, labelFunc}) => {
   if (bitmapData[0] == 255 && bitmapData[1] == 255 && bitmapData[2] == 255) {
-    infoBox.text('none');
+    infoBox.text('');
   } else {
     let output = [],
-      state = getStateFromColor(bitmapData),
-      zip = getZipFromColor(bitmapData);
-    if (keyData && zip in keyData) {
-      output.push(keyData[zip]);
+      id = idFunc(bitmapData),
+      label = labelFunc(bitmapData);
+    if (keyData && id in keyData) {
+      output.push(keyData[id]);
     } else {
-      output.push(zip !== null ? `${zip}, ${state}` : state);
+      output.push(label);
     }
-    // output.push(getStateDetailFromColor(bitmapData));
-    // output.push(getZipDetailFromColor(bitmapData));
-    // output.push(explainGeoColor(bitmapData));
-    output.push("color: " + bitmapData);
-    output.push("image: " + imageData);
+    output.push('color: ' + bitmapData);
+    output.push('image: ' + imageData);
     infoBox.html(`<pre>${output.join('\n')}</pre>`);
   }
 }
 
-hoverBitmap.withKey = (keyData) => {
-  return (bitmapData, imageData, infoBox) => hoverBitmap(bitmapData, imageData, infoBox, keyData)
+hoverBitmap.withArgs = (moreArgs) => {
+  return (args) => hoverBitmap({...args, ...moreArgs})
 }
 
 const urlParams = new URLSearchParams(window.location.search);
@@ -45,13 +45,13 @@ if (map === 'covid') {
   const props = {
     bitmapImage: '../buffalo-properties/bitmap.png',
     visibleImage: '../buffalo-properties/single-family-assessment-per-sqft.png',
-    onClick: (bitmapData, imageData, infoBox) => {
+    onClick: ({bitmapData, imageData, infoBox}) => {
       const propertyId = (bitmapData[0].toString(16) +
         bitmapData[1].toString(16).padStart(2, '0') +
         bitmapData[2].toString(16).padStart(2, '0')).replace(/^0+/, '');
       console.log('click!', propertyId, ['offsetX', 'offsetY'].map(key=>event[key]), bitmapData);
     },
-    onHover: (bitmapData, imageData, infoBox) => {
+    onHover: ({bitmapData, imageData, infoBox}) => {
       if (bitmapData[0] == 255 && bitmapData[1] == 255 && bitmapData[2] == 255) {
         infoBox.text('none');
       } else {
@@ -117,19 +117,25 @@ if (map === 'covid') {
       'displayName': 'Buffalo Property Uses',
       'bitmapImage': '../buffalo-properties/bitmap.png',
       'visibleImage': '../buffalo-properties/use-categories.png',
+      'idFunc': 'buffalo',
+      'bitmapKey': '../buffalo-properties/property.data.json',
     }
   }
   const viewName = urlParams.get('view');
   if (viewName in views) {
     const view = views[viewName];
+    let args = {};
+
+    args.idFunc = ('idFunc' in view) ? idFuncs[view.idFunc] : getZipFromColor;
+    args.labelFunc = ('idFunc' in view) ? idFuncs[view.idFunc] : getLabelFromColor;
     if ('bitmapKey' in view) {
       fetch(view['bitmapKey'])
         .then(response => response.json())
-        .then(data => {
-          bitmap(Object.assign({ onHover: hoverBitmap.withKey(data) }, view));
+        .then(keyData => {
+          bitmap(Object.assign({ onHover: hoverBitmap.withArgs({...args, keyData}) }, view));
         });
     } else {
-      bitmap(Object.assign({ onHover: hoverBitmap }, view));
+      bitmap(Object.assign({ onHover: hoverBitmap.withArgs(args) }, view));
     }
   }
 }

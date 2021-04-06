@@ -132,11 +132,11 @@ export const bitmap = ({
   image.on('click', (event) => {
     const bitmapData = readBitmapData({event, image, bitmapCanvas, bitmapContext}),
       imageData = readImageData({event, image});
-    onClick(bitmapData, imageData, infoBox, {image, event, width, height, bitmapCanvas, bitmapContext});
+    onClick({bitmapData, imageData, infoBox, image, event, width, height, bitmapCanvas, bitmapContext});
   });
   image.on('mousemove', (event) => {
     const bitmapData = readBitmapData({event, image, bitmapCanvas, bitmapContext}),
       imageData = readImageData({event, image});
-    onHover(bitmapData, imageData, infoBox);
+    onHover({bitmapData, imageData, infoBox});
   });
 }
