@@ -116,7 +116,7 @@ if (map === 'covid') {
     'buffalo/use': {
       'displayName': 'Buffalo Property Uses',
       'bitmapImage': '../buffalo-properties/bitmap.png',
-      'visibleImage': '../buffalo-properties/use-categories.png',
+      'visibleImage': '../buffalo-properties/use-categories.1.cropped.png',
       'idFunc': 'buffalo',
       'bitmapKey': '../buffalo-properties/property.data.json',
     }
