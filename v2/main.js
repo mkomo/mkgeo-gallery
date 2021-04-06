@@ -10,14 +10,18 @@ let {
   explainGeoColor,
 } = zipbitmap(null, true);
 
-const hoverBitmap = (bitmapData, imageData, infoBox) => {
+const hoverBitmap = (bitmapData, imageData, infoBox, keyData) => {
   if (bitmapData[0] == 255 && bitmapData[1] == 255 && bitmapData[2] == 255) {
     infoBox.text('none');
   } else {
-    let output = [];
-    let state = getStateFromColor(bitmapData)
-    let zip = getZipFromColor(bitmapData)
-    output.push(`${zip}, ${state}`);
+    let output = [],
+      state = getStateFromColor(bitmapData),
+      zip = getZipFromColor(bitmapData);
+    if (keyData && zip in keyData) {
+      output.push(keyData[zip]);
+    } else {
+      output.push(zip !== null ? `${zip}, ${state}` : state);
+    }
     // output.push(getStateDetailFromColor(bitmapData));
     // output.push(getZipDetailFromColor(bitmapData));
     // output.push(explainGeoColor(bitmapData));
@@ -25,6 +29,10 @@ const hoverBitmap = (bitmapData, imageData, infoBox) => {
     output.push("image: " + imageData);
     infoBox.html(`<pre>${output.join('\n')}</pre>`);
   }
+}
+
+hoverBitmap.withKey = (keyData) => {
+  return (bitmapData, imageData, infoBox) => hoverBitmap(bitmapData, imageData, infoBox, keyData)
 }
 
 const urlParams = new URLSearchParams(window.location.search);
@@ -97,6 +105,7 @@ if (map === 'covid') {
     "pop-density-county": {
       "displayName": "County Population Density",
       "bitmapImage": "../bitmapus/county.png",
+      "bitmapKey": "../bitmapus/county.data.json",
       "visibleImage": "../choropleth/county-pop-density.png"
     },
     "pop-density-state": {
@@ -105,9 +114,18 @@ if (map === 'covid') {
       "visibleImage": "../choropleth/state-pop-density.1.png"
     },
   }
-  const view = urlParams.get('view');
-  if (view in views) {
-    bitmap(Object.assign({ onHover: hoverBitmap }, views[view]));
+  const viewName = urlParams.get('view');
+  if (viewName in views) {
+    const view = views[viewName];
+    if ("bitmapKey" in view) {
+      fetch(view["bitmapKey"])
+        .then(response => response.json())
+        .then(data => {
+          bitmap(Object.assign({ onHover: hoverBitmap.withKey(data) }, view));
+        });
+    } else {
+      bitmap(Object.assign({ onHover: hoverBitmap }, view));
+    }
   }
 }
 
