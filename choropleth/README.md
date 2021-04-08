@@ -1,7 +1,7 @@
 # Choropleth Maps
 A choropleth map is a map that uses shading or color to impart some information about regions on the map. One common quantitative choropleth is a population density map.
 
-![Choropleth for population density by state](./state-pop-density.png)
+[![Choropleth for population density by state](./state-pop-density.png)](/mkgeo-gallery/viewer/?view=pop-density/state)
 ```
 csv-to-ndjson <(tail -n+5 ./data/census/population/pop_density.csv) > data/census/population/state-historic-population.ndjson
 
@@ -17,7 +17,7 @@ mkgeo-render data/census/states_with_population.ndjson -M mappers/choropleth.js 
   }" -o output/zipbitmap/state-pop-density
 ```
 
-![Choropleth for population density by zip](./zip-pop-density.png)
+[![Choropleth for population density by zip](./zip-pop-density.png)](/mkgeo-gallery/viewer/?view=pop-density/zip)
 ```
 csv-to-ndjson data/census/population/ACS_17_5YR_DP05/ACS_17_5YR_DP05_with_ann.csv GEO.id2 HC01_VC03 \
   | tail -n +2 > data/census/population/zip-total-population.ndjson
