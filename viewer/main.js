@@ -77,18 +77,6 @@ if (map === 'covid') {
   format info box
    */
 
-  const props = {
-    bitmapImage: '../zipbitmap/multi-state-zips-4x.png',
-    visibleImage: '../zipbitmap/multi-state-zips-4x.png',
-    onClick: (bitmapData, imageData, infoBox, {image, event, width, height, bitmapCanvas, bitmapContext}) => {
-    },
-    onHover: hoverBitmap
-  };
-
-  if (visibleImage) {
-    props.visibleImage = `../${visibleImage}.png`;
-  }
-
 } else {
   const views = {
     //bitmaps
