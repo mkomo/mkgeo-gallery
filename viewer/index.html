@@ -1,106 +1,18 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
- "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<!DOCTYPE html>
+<html>
+
 <head>
-  <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
-  <title>mkgeo viewer</title>
-  <meta name="viewport" content="width=device-width">
-  <style>
-  body {
-    margin: 0;
-    background-color: #555;
-    position: relative;
-    font-family: monospace;
-  }
-
-    canvas {
-      border: 0;
-      cursor: default;
-      margin: 0px auto;
-      display: block;
-    }
-    img#map {
-      display:none;
-    }
-    #message {
-      position: fixed;
-      padding: 10px;
-      background-color: #fff;
-      left: 10px;
-      top: 10px;
-    }
-  </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,minimal-ui">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.0/css/bootstrap.css" integrity="sha256-pok3KZeHPJvZi4o04UfObTBGUAIkwF/zZWbh+UuKaoE=" crossorigin="anonymous" />
+  <link rel="stylesheet" href="./style.css">
+  <title>Map Viewer v2</title>
 </head>
+
 <body>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.7.0/d3.min.js"> </script>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.3.2/jquery.min.js"></script>
-<script type="text/javascript" src="/mkgeo/mappers/zipbitmap.js"></script>
-<script type="text/javascript">
-
-
-let {
-  getStateDetailFromColor,
-  getStateFromColor,
-  getZipDetailFromColor,
-  getZipFromColor,
-  explainGeoColor,
-} = zipbitmap(null, true);
-
-function getDimensions() {
-  return {
-    width: window.innerWidth,
-    height: window.innerHeight
-  }
-}
-function loadCanvas(){//onReady
-  let dim = getDimensions();
-  if(document.getElementById('canvas')) {
-    var image = document.getElementById('map');
-    canvas = document.getElementById('canvas');
-    canvasContext = canvas.getContext('2d');
-
-    canvas.setAttribute('width', image.width);
-    canvas.setAttribute('height', image.height);
-    canvasContext.drawImage(image, 0, 0);
-  };
-  $('#canvas').mousemove(function(e){
-    var offset = $('#canvas').offset();
-    var x = Math.floor(e.pageX - offset.left);
-    var y = Math.floor(e.pageY - offset.top);
-    var imgData = canvasContext.getImageData(x, y, 1, 1);
-    if (imgData.data.some(a=>a!=255)) {
-      let output = [];
-      // console.log(imgData.data.every(a=>a==255), imgData.data);
-      let state = getStateFromColor(imgData.data)
-      let group = getZipFromColor(imgData.data)
-      output.push(`${group}, ${state}`);
-      output.push(getStateDetailFromColor(imgData.data));
-      output.push(getZipDetailFromColor(imgData.data));
-      output.push(explainGeoColor(imgData.data));
-      output.push("color: " + imgData.data);
-      $('#message').html(output.join('\n'));
-    } else {
-      $('#message').html('empty??');
-    }
-  });
-}
-
-</script>
-<div id="container" style="margin: auto">
-  <canvas id="canvas"></canvas>
-  <pre id="message"></pre>
-</div>
-
-<script type="text/javascript">
-  let urlParams = new URLSearchParams(window.location.search);
-  let bitmap = urlParams.get('bitmap') || 'zipbitmap/multi-state-zips';
-  let src = `../${bitmap}.png`
-  let img = document.createElement('img');
-  img.src = src;
-  img.id = "map"
-  img.onload = loadCanvas;
-  document.getElementById('container').append(img)
-</script>
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/6.5.0/d3.min.js" integrity="sha512-0XfwGD1nxplHpehcSVI7lY+m/5L37PNHDt+DOc7aLFckwPXjnjeA1oeNbru7YeI4VLs9i+ADnnHEhP69C9CqTA==" crossorigin="anonymous"></script>
+  <script type="text/javascript" src="/mkgeo/mappers/zipbitmap.js"></script>
+  <script type="module" src="./main.js"></script>
 </body>
+
 </html>

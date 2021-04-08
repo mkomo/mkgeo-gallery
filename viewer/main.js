@@ -68,18 +68,13 @@ if (map === 'covid') {
   }
 
   bitmap(props);
-} else if (map === 'zips') {
+
   /*
   determine how many colors are in each scale
   do colors in mkgeo-render by percentile or half-percentile (if there are 200 colors)
   add info to infobox about top color
   flip high and low bits in bitmaps
   format info box
-
-  zcta
-  county
-  congress
-  state
    */
 
   const props = {
@@ -94,34 +89,66 @@ if (map === 'covid') {
     props.visibleImage = `../${visibleImage}.png`;
   }
 
-  bitmap(props);
 } else {
   const views = {
+    //bitmaps
+    'bitmapus/zip': {
+      'displayName': 'Zip Code Tabulation Area Bitmap',
+      'visibleImage': '../zipbitmap/multi-state-zips-4x.png',
+      'bitmapImage': '../zipbitmap/multi-state-zips-4x.png'
+    },
+    'bitmapus/county': {
+      'displayName': 'County Bitmap',
+      'visibleImage': '../bitmapus/county.png',
+      'bitmapImage': '../bitmapus/county.png',
+      'bitmapKey': '../bitmapus/county.data.json'
+    },
+    'bitmapus/congress115': {
+      'displayName': '115th Congressional District Bitmap',
+      'visibleImage': '../bitmapus/congress115.png',
+      'bitmapImage': '../bitmapus/congress115.png'
+    },
+    'bitmapus/state': {
+      'displayName': 'State Bitmap',
+      'visibleImage': '../bitmapus/state.png',
+      'bitmapImage': '../bitmapus/state.png'
+    },
+
+    //pop density
     'pop-density-zip': {
       'displayName': 'ZCTA Population Density',
-      'bitmapImage': '../zipbitmap/multi-state-zips-4x.png',
-      'visibleImage': '../choropleth/zip-pop-density.1.png'
+      'visibleImage': '../choropleth/zip-pop-density.1.png',
+      'bitmapImage': '../zipbitmap/multi-state-zips-4x.png'
     },
     'pop-density-county': {
       'displayName': 'County Population Density',
+      'visibleImage': '../choropleth/county-pop-density.png',
       'bitmapImage': '../bitmapus/county.png',
-      'bitmapKey': '../bitmapus/county.data.json',
-      'visibleImage': '../choropleth/county-pop-density.png'
+      'bitmapKey': '../bitmapus/county.data.json'
     },
     'pop-density-state': {
       'displayName': 'State Population Density',
-      'bitmapImage': '../bitmapus/state.png',
-      'visibleImage': '../choropleth/state-pop-density.1.png'
+      'visibleImage': '../choropleth/state-pop-density.1.png',
+      'bitmapImage': '../bitmapus/state.png'
     },
+
+    //Buffalo
     'buffalo/use': {
       'displayName': 'Buffalo Property Uses',
-      'bitmapImage': '../buffalo-properties/bitmap.png',
       'visibleImage': '../buffalo-properties/use-categories.1.cropped.png',
-      'idFunc': 'buffalo',
+      'bitmapImage': '../buffalo-properties/bitmap.png',
       'bitmapKey': '../buffalo-properties/property.data.json',
+      'idFunc': 'buffalo'
+    },
+    'buffalo': {
+      'displayName': 'Buffalo Property Bitmap',
+      'visibleImage': '../buffalo-properties/bitmap.png',
+      'bitmapImage': '../buffalo-properties/bitmap.png',
+      'bitmapKey': '../buffalo-properties/property.data.json',
+      'idFunc': 'buffalo',
     }
   }
-  const viewName = urlParams.get('view');
+  const viewName = urlParams.get('view') || 'bitmapus/zip';
   if (viewName in views) {
     const view = views[viewName];
     let args = {};
