@@ -4,7 +4,10 @@ import { bitmap } from './modules/bitmap.js'
 // This import is handled differently because it comes from a file that has to be formatted for mkgeo-render mapping
 const {
   getLabelFromColor,
-  getZipFromColor
+  getZipFromColor,
+  getStateDetailFromColor,
+  getZipDetailFromColor,
+  explainGeoColor
 } = zipbitmap(null, true);
 
 const idFuncs = {
@@ -13,7 +16,7 @@ const idFuncs = {
     bitmapData[2].toString(16).padStart(2, '0')).replace(/^0+/, '')
 }
 
-const hoverBitmap = ({bitmapData, imageData, infoBox, keyData, idFunc, labelFunc}) => {
+const hoverBitmap = ({bitmapData, imageData, infoBox, keyData, idFunc, labelFunc, bitmapDetails}) => {
   if (bitmapData[0] == 255 && bitmapData[1] == 255 && bitmapData[2] == 255) {
     infoBox.text('');
   } else {
@@ -24,6 +27,11 @@ const hoverBitmap = ({bitmapData, imageData, infoBox, keyData, idFunc, labelFunc
       output.push(keyData[id]);
     } else {
       output.push(label);
+    }
+    if (bitmapDetails) {
+      output.push(getStateDetailFromColor(bitmapData));
+      output.push(getZipDetailFromColor(bitmapData));
+      output.push(explainGeoColor(bitmapData));
     }
     output.push('color: ' + bitmapData);
     output.push('image: ' + imageData);
@@ -41,34 +49,6 @@ const map = urlParams.get('map'),
 
 if (map === 'covid') {
   mount('/covid/deaths-09-20.svg', 'deaths as of 9/20');
-} else if (map === 'buffalo') {
-  const props = {
-    bitmapImage: '../buffalo-properties/bitmap.png',
-    visibleImage: '../buffalo-properties/single-family-assessment-per-sqft.png',
-    onClick: ({bitmapData, imageData, infoBox}) => {
-      const propertyId = (bitmapData[0].toString(16) +
-        bitmapData[1].toString(16).padStart(2, '0') +
-        bitmapData[2].toString(16).padStart(2, '0')).replace(/^0+/, '');
-      console.log('click!', propertyId, ['offsetX', 'offsetY'].map(key=>event[key]), bitmapData);
-    },
-    onHover: ({bitmapData, imageData, infoBox}) => {
-      if (bitmapData[0] == 255 && bitmapData[1] == 255 && bitmapData[2] == 255) {
-        infoBox.text('none');
-      } else {
-        const propertyId = (bitmapData[0].toString(16) +
-          bitmapData[1].toString(16).padStart(2, '0') +
-          bitmapData[2].toString(16).padStart(2, '0')).replace(/^0+/, '');
-        infoBox.text(propertyId);
-      }
-    }
-  };
-
-  if (visibleImage) {
-    props.visibleImage = `../${visibleImage}.png`;
-  }
-
-  bitmap(props);
-
   /*
   determine how many colors are in each scale
   do colors in mkgeo-render by percentile or half-percentile (if there are 200 colors)
@@ -83,23 +63,27 @@ if (map === 'covid') {
     'bitmapus/zip': {
       'displayName': 'Zip Code Tabulation Area Bitmap',
       'visibleImage': '../zipbitmap/multi-state-zips-4x.png',
-      'bitmapImage': '../zipbitmap/multi-state-zips-4x.png'
+      'bitmapImage': '../zipbitmap/multi-state-zips-4x.png',
+      'bitmapDetails': true
     },
     'bitmapus/county': {
       'displayName': 'County Bitmap',
       'visibleImage': '../bitmapus/county.png',
       'bitmapImage': '../bitmapus/county.png',
-      'bitmapKey': '../bitmapus/county.data.json'
+      'bitmapKey': '../bitmapus/county.data.json',
+      'bitmapDetails': true
     },
     'bitmapus/congress115': {
       'displayName': '115th Congressional District Bitmap',
       'visibleImage': '../bitmapus/congress115.png',
-      'bitmapImage': '../bitmapus/congress115.png'
+      'bitmapImage': '../bitmapus/congress115.png',
+      'bitmapDetails': true
     },
     'bitmapus/state': {
       'displayName': 'State Bitmap',
       'visibleImage': '../bitmapus/state.png',
-      'bitmapImage': '../bitmapus/state.png'
+      'bitmapImage': '../bitmapus/state.png',
+      'bitmapDetails': true
     },
 
     //pop density
@@ -128,6 +112,13 @@ if (map === 'covid') {
       'bitmapKey': '../buffalo-properties/property.data.json',
       'idFunc': 'buffalo'
     },
+    'buffalo/assessment-sqft': {
+      'displayName': 'Buffalo Properties - Assessed value per sqft',
+      'visibleImage': '../buffalo-properties/single-family-assessment-per-sqft.png',
+      'bitmapImage': '../buffalo-properties/bitmap.png',
+      'bitmapKey': '../buffalo-properties/property.data.json',
+      'idFunc': 'buffalo'
+    },
     'buffalo': {
       'displayName': 'Buffalo Property Bitmap',
       'visibleImage': '../buffalo-properties/bitmap.png',
@@ -139,7 +130,7 @@ if (map === 'covid') {
   const viewName = urlParams.get('view') || 'bitmapus/zip';
   if (viewName in views) {
     const view = views[viewName];
-    let args = {};
+    let args = Object.assign({}, view);
 
     args.idFunc = ('idFunc' in view) ? idFuncs[view.idFunc] : getZipFromColor;
     args.labelFunc = ('idFunc' in view) ? idFuncs[view.idFunc] : getLabelFromColor;
