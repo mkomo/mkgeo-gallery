@@ -6,7 +6,7 @@ Here is a map of the raw parcel data obtained from [data.buffalony.gov](https://
 ![Map of Parcels from Open Data Buffalo](./Green_Code_Zoning_2017_data.png)
 
 And here's a map of those parcels color-coded based on the *use code* pulled from the **OARS** data:
-![Map of all buffalo parcels color-coded by OARS use code](./use-categories.png)
+![Map of all buffalo parcels color-coded by OARS use code](./use-categories.cropped.png)
 TODO (categorical legend with counts)
 
 Note some rights of way and various other parcels do not have **OARS** data associated with them:

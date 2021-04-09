@@ -16,15 +16,18 @@ const idFuncs = {
     bitmapData[2].toString(16).padStart(2, '0')).replace(/^0+/, '')
 }
 
-const hoverBitmap = ({bitmapData, imageData, infoBox, keyData, idFunc, labelFunc, bitmapDetails}) => {
+const hoverBitmap = ({bitmapData, imageData, infoBox, bitmapKeyData, idFunc, labelFunc, bitmapDetails, displayName,
+    choroplethScale,
+    choroplethQuantilesData
+  }) => {
   if (bitmapData[0] == 255 && bitmapData[1] == 255 && bitmapData[2] == 255) {
-    infoBox.text('');
+    infoBox.text(displayName);
   } else {
     let output = [],
       id = idFunc(bitmapData),
       label = labelFunc(bitmapData);
-    if (keyData && id in keyData) {
-      output.push(keyData[id]);
+    if (bitmapKeyData && id in bitmapKeyData) {
+      output.push(bitmapKeyData[id]);
     } else {
       output.push(label);
     }
@@ -32,15 +35,65 @@ const hoverBitmap = ({bitmapData, imageData, infoBox, keyData, idFunc, labelFunc
       output.push(getStateDetailFromColor(bitmapData));
       output.push(getZipDetailFromColor(bitmapData));
       output.push(explainGeoColor(bitmapData));
+      output.push('color: ' + bitmapData);
     }
-    output.push('color: ' + bitmapData);
-    output.push('image: ' + imageData);
+    if (choroplethScale) {
+      const cssColor = `rgb(${imageData[0]}, ${imageData[1]}, ${imageData[2]})`
+      if (cssColor in choroplethScale) {
+        // color -> scale value [0,1] (with upper and lower bounds) -> actual value (with upper and lower bounds)
+        const colorInterval = choroplethScale[cssColor];
+        output.push(`choro: ${Math.floor(colorInterval * 100)}th percentile`)
+        if (choroplethQuantilesData) {
+          // console.log('choroplethQuantilesData',choroplethQuantilesData);
+          const segmentCount = choroplethQuantilesData.length - 1,
+            lowerBoundIndex = Math.floor(segmentCount * colorInterval), //TODO this is not quite right.
+            // we need to consider when a color interval extends past the quantile boundary
+            upperBoundIndex = Math.ceil(segmentCount * colorInterval),
+            lowerBoundValue = choroplethQuantilesData[lowerBoundIndex],
+            upperBoundValue = choroplethQuantilesData[upperBoundIndex];
+          if (upperBoundValue - lowerBoundValue < Number.EPSILON) {
+            output.push(`value: ${lowerBoundValue}`)
+          } else {
+            output.push(`range: ${lowerBoundValue}-${upperBoundValue}`)
+          }
+        }
+      } else if (imageData[0] == 255 && imageData[1] == 255 && imageData[2] == 255) {
+        output.push('choro: No Data')
+      } else {
+        output.push('choro: NOT FOUND:' + cssColor)
+      }
+    } else {
+      // This is a placeholder -- handle categorical colors, etc
+      output.push('image: ' + imageData);
+    }
     infoBox.html(`<pre>${output.join('\n')}</pre>`);
   }
 }
 
 hoverBitmap.withArgs = (moreArgs) => {
   return (args) => hoverBitmap({...args, ...moreArgs})
+}
+
+const getAllColorsForScale = scaleName => {
+  let scale = d3[`interpolate${scaleName}`];
+  return getAllScaleColorsBetween(0, 1, scale);
+}
+const getAllScaleColorsBetween = (start, end, scale) => {
+  const s = scale(start),
+    e = scale(end);
+  if (s == e) {
+    return {[s]: start};
+  } else if (colorDiff(s, e) == 1 || end - start < Number.EPSILON) {
+    return {[s]: start, [e]: end};
+  } else {
+    // console.log('s', start, s, '\ne', end, e, end - start);
+    const mid = (start + end) / 2;
+    return {...getAllScaleColorsBetween(start, mid, scale), ...getAllScaleColorsBetween(mid, end, scale)};
+  }
+}
+const colorDiff = (s, e) => {
+  const c1 = d3.color(s), c2 = d3.color(e);
+  return Math.abs(c1.r - c2.r) + Math.abs(c1.g - c2.g) + Math.abs(c1.b - c2.b);
 }
 
 const urlParams = new URLSearchParams(window.location.search);
@@ -85,29 +138,42 @@ if (map === 'covid') {
       'bitmapImage': '../bitmapus/state.png',
       'bitmapDetails': true
     },
+    'buffalo': {
+      'displayName': 'Buffalo Property Bitmap',
+      'visibleImage': '../buffalo-properties/bitmap.png',
+      'bitmapImage': '../buffalo-properties/bitmap.png',
+      'bitmapKey': '../buffalo-properties/property.data.json',
+      'idFunc': 'buffalo',
+    },
 
     //pop density
-    'pop-density-zip': {
+    'pop-density/zip': {
       'displayName': 'ZCTA Population Density',
-      'visibleImage': '../choropleth/zip-pop-density.1.png',
-      'bitmapImage': '../zipbitmap/multi-state-zips-4x.png'
+      'visibleImage': '../choropleth/zip-pop-density.png',
+      'bitmapImage': '../zipbitmap/multi-state-zips-4x.png',
+      'choroplethScaleName': 'YlOrRd',
+      'choroplethQuantiles': '../choropleth/zip-pop-density.quantiles.json'
     },
-    'pop-density-county': {
+    'pop-density/county': {
       'displayName': 'County Population Density',
       'visibleImage': '../choropleth/county-pop-density.png',
       'bitmapImage': '../bitmapus/county.png',
-      'bitmapKey': '../bitmapus/county.data.json'
+      'bitmapKey': '../bitmapus/county.data.json',
+      'choroplethScaleName': 'YlOrRd',
+      'choroplethQuantiles': '../choropleth/county-pop-density.quantiles.json'
     },
-    'pop-density-state': {
+    'pop-density/state': {
       'displayName': 'State Population Density',
-      'visibleImage': '../choropleth/state-pop-density.1.png',
-      'bitmapImage': '../bitmapus/state.png'
+      'visibleImage': '../choropleth/state-pop-density.png',
+      'bitmapImage': '../bitmapus/state.png',
+      'choroplethScaleName': 'YlOrRd',
+      'choroplethQuantiles': '../choropleth/state-pop-density.quantiles.json'
     },
 
     //Buffalo
     'buffalo/use': {
       'displayName': 'Buffalo Property Uses',
-      'visibleImage': '../buffalo-properties/use-categories.1.cropped.png',
+      'visibleImage': '../buffalo-properties/use-categories.cropped.png',
       'bitmapImage': '../buffalo-properties/bitmap.png',
       'bitmapKey': '../buffalo-properties/property.data.json',
       'idFunc': 'buffalo'
@@ -118,13 +184,6 @@ if (map === 'covid') {
       'bitmapImage': '../buffalo-properties/bitmap.png',
       'bitmapKey': '../buffalo-properties/property.data.json',
       'idFunc': 'buffalo'
-    },
-    'buffalo': {
-      'displayName': 'Buffalo Property Bitmap',
-      'visibleImage': '../buffalo-properties/bitmap.png',
-      'bitmapImage': '../buffalo-properties/bitmap.png',
-      'bitmapKey': '../buffalo-properties/property.data.json',
-      'idFunc': 'buffalo',
     }
   }
   const viewName = urlParams.get('view') || 'bitmapus/zip';
@@ -134,15 +193,30 @@ if (map === 'covid') {
 
     args.idFunc = ('idFunc' in view) ? idFuncs[view.idFunc] : getZipFromColor;
     args.labelFunc = ('idFunc' in view) ? idFuncs[view.idFunc] : getLabelFromColor;
+    args.choroplethScale = ('choroplethScaleName' in view) ? getAllColorsForScale(view.choroplethScaleName) : null;
+
+    const fetches = {};
+
     if ('bitmapKey' in view) {
-      fetch(view['bitmapKey'])
-        .then(response => response.json())
-        .then(keyData => {
-          bitmap(Object.assign({ onHover: hoverBitmap.withArgs({...args, keyData}) }, view));
-        });
-    } else {
-      bitmap(Object.assign({ onHover: hoverBitmap.withArgs(args) }, view));
+      console.log('fetch bitmapKey')
+      fetches['bitmapKey'] = fetch(view['bitmapKey']);
     }
+
+    if ('choroplethQuantiles' in view) {
+      console.log('fetch choroplethQuantiles key')
+      fetches['choroplethQuantiles'] = fetch(view['choroplethQuantiles']);
+    }
+
+    Promise.all(Object.values(fetches))
+    .then(responses=>Promise.all(responses.map(resp => resp.json())))
+    .then(data => {
+      Object.keys(fetches).forEach((key, i) => {
+        args[key + 'Data'] = data[i];
+      })
+      bitmap(Object.assign({ onHover: hoverBitmap.withArgs(args) }, view));
+    })
+    .catch(error => console.error(error));
+
   }
 }
 
