@@ -16,11 +16,26 @@ const idFuncs = {
     bitmapData[2].toString(16).padStart(2, '0')).replace(/^0+/, '')
 }
 
+const ordinal = number => {
+  if (number % 10 == 1) {
+    return `${number}st`
+  } else if (number % 10 == 2) {
+    return `${number}nd`
+  } else if (number % 10 == 3) {
+    return `${number}rd`
+  } else {
+    return `${number}th`
+  }
+}
+
 const hoverBitmap = ({bitmapData, imageData, infoBox, bitmapKeyData, idFunc, labelFunc, bitmapDetails, displayName,
     choroplethScale,
-    choroplethQuantilesData
+    choroplethQuantilesData,
+    choroplethDataUnit,
+    choroplethIsExact
   }) => {
-  if (bitmapData[0] == 255 && bitmapData[1] == 255 && bitmapData[2] == 255) {
+  if (bitmapData[0] == 255 && bitmapData[1] == 255 && bitmapData[2] == 255
+      || bitmapData[0] == 0 && bitmapData[1] == 0 && bitmapData[2] == 0) {
     infoBox.text(displayName);
   } else {
     let output = [],
@@ -42,25 +57,29 @@ const hoverBitmap = ({bitmapData, imageData, infoBox, bitmapKeyData, idFunc, lab
       if (cssColor in choroplethScale) {
         // color -> scale value [0,1] (with upper and lower bounds) -> actual value (with upper and lower bounds)
         const colorInterval = choroplethScale[cssColor];
-        output.push(`choro: ${Math.floor(colorInterval * 100)}th percentile`)
         if (choroplethQuantilesData) {
-          // console.log('choroplethQuantilesData',choroplethQuantilesData);
           const segmentCount = choroplethQuantilesData.length - 1,
-            lowerBoundIndex = Math.floor(segmentCount * colorInterval), //TODO this is not quite right.
+            lowerBoundIndex = Math.round(segmentCount * colorInterval), //TODO this is not quite right.
             // we need to consider when a color interval extends past the quantile boundary
-            upperBoundIndex = Math.ceil(segmentCount * colorInterval),
-            lowerBoundValue = choroplethQuantilesData[lowerBoundIndex],
-            upperBoundValue = choroplethQuantilesData[upperBoundIndex];
-          if (upperBoundValue - lowerBoundValue < Number.EPSILON) {
-            output.push(`value: ${lowerBoundValue}`)
+            lowerBoundValue = choroplethQuantilesData[lowerBoundIndex];
+          if (choroplethIsExact) {
+            output.push(`${ordinal(choroplethQuantilesData.length - lowerBoundIndex)} of ${choroplethQuantilesData.length}`)
+            output.push(`${lowerBoundValue} ${choroplethDataUnit}`)
           } else {
-            output.push(`range: ${lowerBoundValue}-${upperBoundValue}`)
+            const upperBoundIndex = Math.ceil(segmentCount * colorInterval),
+              upperBoundValue = choroplethQuantilesData[upperBoundIndex];
+            output.push(`${ordinal(Math.floor(colorInterval * 100))} percentile`);
+            if (upperBoundValue - lowerBoundValue < Number.EPSILON) {
+              output.push(`${lowerBoundValue} ${choroplethDataUnit}`)
+            } else {
+              output.push(`${lowerBoundValue}-${upperBoundValue} ${choroplethDataUnit}`);
+            }
           }
         }
       } else if (imageData[0] == 255 && imageData[1] == 255 && imageData[2] == 255) {
-        output.push('choro: No Data')
+        output.push('Choropleth: No Data')
       } else {
-        output.push('choro: NOT FOUND:' + cssColor)
+        output.push('Choropleth: COLOR NOT FOUND:' + cssColor)
       }
     } else {
       // This is a placeholder -- handle categorical colors, etc
@@ -73,7 +92,6 @@ const hoverBitmap = ({bitmapData, imageData, infoBox, bitmapKeyData, idFunc, lab
 hoverBitmap.withArgs = (moreArgs) => {
   return (args) => hoverBitmap({...args, ...moreArgs})
 }
-
 const getAllColorsForScale = scaleName => {
   let scale = d3[`interpolate${scaleName}`];
   return getAllScaleColorsBetween(0, 1, scale);
@@ -152,7 +170,8 @@ if (map === 'covid') {
       'visibleImage': '../choropleth/zip-pop-density.png',
       'bitmapImage': '../zipbitmap/multi-state-zips-4x.png',
       'choroplethScaleName': 'YlOrRd',
-      'choroplethQuantiles': '../choropleth/zip-pop-density.quantiles.json'
+      'choroplethQuantiles': '../choropleth/zip-pop-density.quantiles.json',
+      'choroplethDataUnit': 'people per sq. mi.'
     },
     'pop-density/county': {
       'displayName': 'County Population Density',
@@ -160,14 +179,17 @@ if (map === 'covid') {
       'bitmapImage': '../bitmapus/county.png',
       'bitmapKey': '../bitmapus/county.data.json',
       'choroplethScaleName': 'YlOrRd',
-      'choroplethQuantiles': '../choropleth/county-pop-density.quantiles.json'
+      'choroplethQuantiles': '../choropleth/county-pop-density.quantiles.json',
+      'choroplethDataUnit': 'people per sq. mi.'
     },
     'pop-density/state': {
       'displayName': 'State Population Density',
       'visibleImage': '../choropleth/state-pop-density.png',
       'bitmapImage': '../bitmapus/state.png',
       'choroplethScaleName': 'YlOrRd',
-      'choroplethQuantiles': '../choropleth/state-pop-density.quantiles.json'
+      'choroplethQuantiles': '../choropleth/state-pop-density.quantiles.json',
+      'choroplethDataUnit': 'people per sq. mi.',
+      'choroplethIsExact': true
     },
 
     //Buffalo
