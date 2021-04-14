@@ -94,9 +94,9 @@ hoverBitmap.withArgs = (moreArgs) => {
 }
 const getAllColorsForScale = scaleName => {
   let scale = d3[`interpolate${scaleName}`];
-  return getAllScaleColorsBetween(0, 1, scale);
+  return getAllScaleColorsBetween(scale);
 }
-const getAllScaleColorsBetween = (start, end, scale) => {
+const getAllScaleColorsBetween = (scale, start=0, end=1) => {
   const s = scale(start),
     e = scale(end);
   if (s == e) {
@@ -106,7 +106,7 @@ const getAllScaleColorsBetween = (start, end, scale) => {
   } else {
     // console.log('s', start, s, '\ne', end, e, end - start);
     const mid = (start + end) / 2;
-    return {...getAllScaleColorsBetween(start, mid, scale), ...getAllScaleColorsBetween(mid, end, scale)};
+    return {...getAllScaleColorsBetween(scale, start, mid), ...getAllScaleColorsBetween(scale, mid, end)};
   }
 }
 const colorDiff = (s, e) => {
@@ -189,6 +189,16 @@ if (map === 'covid') {
       'choroplethScaleName': 'YlOrRd',
       'choroplethQuantiles': '../choropleth/state-pop-density.quantiles.json',
       'choroplethDataUnit': 'people per sq. mi.',
+      'choroplethIsExact': true
+    },
+
+    'yougov/state-rankings': {
+      'displayName': 'States Ranked - YouGov.com 2020-04-13',
+      'visibleImage': '../choropleth/state-yougov-ranking.png',
+      'bitmapImage': '../bitmapus/state.png',
+      'choroplethScaleName': 'PRGn',
+      'choroplethQuantiles': '../choropleth/state-yougov-ranking.quantiles.json',
+      'choroplethDataUnit': '% won head-to-head',
       'choroplethIsExact': true
     },
 
