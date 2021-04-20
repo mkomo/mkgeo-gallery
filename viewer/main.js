@@ -129,126 +129,39 @@ if (map === 'covid') {
    */
 
 } else {
-  const views = {
-    //bitmaps
-    'bitmapus/zip': {
-      'displayName': 'Zip Code Tabulation Area Bitmap',
-      'visibleImage': '../zipbitmap/multi-state-zips-4x.png',
-      'bitmapImage': '../zipbitmap/multi-state-zips-4x.png',
-      'bitmapDetails': true
-    },
-    'bitmapus/county': {
-      'displayName': 'County Bitmap',
-      'visibleImage': '../bitmapus/county.png',
-      'bitmapImage': '../bitmapus/county.png',
-      'bitmapKey': '../bitmapus/county.data.json',
-      'bitmapDetails': true
-    },
-    'bitmapus/congress115': {
-      'displayName': '115th Congressional District Bitmap',
-      'visibleImage': '../bitmapus/congress115.png',
-      'bitmapImage': '../bitmapus/congress115.png',
-      'bitmapDetails': true
-    },
-    'bitmapus/state': {
-      'displayName': 'State Bitmap',
-      'visibleImage': '../bitmapus/state.png',
-      'bitmapImage': '../bitmapus/state.png',
-      'bitmapDetails': true
-    },
-    'buffalo': {
-      'displayName': 'Buffalo Property Bitmap',
-      'visibleImage': '../buffalo-properties/bitmap.png',
-      'bitmapImage': '../buffalo-properties/bitmap.png',
-      'bitmapKey': '../buffalo-properties/property.data.json',
-      'idFunc': 'buffalo',
-    },
+  fetch('./views.json').then(resp => resp.json()).then(views=> {
+    const viewName = urlParams.get('view') || 'bitmapus/zip';
+    if (viewName in views) {
+      const view = views[viewName];
+      let args = Object.assign({}, view);
 
-    //pop density
-    'pop-density/zip': {
-      'displayName': 'ZCTA Population Density',
-      'visibleImage': '../choropleth/zip-pop-density.png',
-      'bitmapImage': '../zipbitmap/multi-state-zips-4x.png',
-      'choroplethScaleName': 'YlOrRd',
-      'choroplethQuantiles': '../choropleth/zip-pop-density.quantiles.json',
-      'choroplethDataUnit': 'people per sq. mi.'
-    },
-    'pop-density/county': {
-      'displayName': 'County Population Density',
-      'visibleImage': '../choropleth/county-pop-density.png',
-      'bitmapImage': '../bitmapus/county.png',
-      'bitmapKey': '../bitmapus/county.data.json',
-      'choroplethScaleName': 'YlOrRd',
-      'choroplethQuantiles': '../choropleth/county-pop-density.quantiles.json',
-      'choroplethDataUnit': 'people per sq. mi.'
-    },
-    'pop-density/state': {
-      'displayName': 'State Population Density',
-      'visibleImage': '../choropleth/state-pop-density.png',
-      'bitmapImage': '../bitmapus/state.png',
-      'choroplethScaleName': 'YlOrRd',
-      'choroplethQuantiles': '../choropleth/state-pop-density.quantiles.json',
-      'choroplethDataUnit': 'people per sq. mi.',
-      'choroplethIsExact': true
-    },
+      args.idFunc = ('idFunc' in view) ? idFuncs[view.idFunc] : getZipFromColor;
+      args.labelFunc = ('idFunc' in view) ? idFuncs[view.idFunc] : getLabelFromColor;
+      args.choroplethScale = ('choroplethScaleName' in view) ? getAllColorsForScale(view.choroplethScaleName) : null;
 
-    'yougov/state-rankings': {
-      'displayName': 'States Ranked - YouGov.com 2020-04-13',
-      'visibleImage': '../choropleth/state-yougov-ranking.png',
-      'bitmapImage': '../bitmapus/state.png',
-      'choroplethScaleName': 'PRGn',
-      'choroplethQuantiles': '../choropleth/state-yougov-ranking.quantiles.json',
-      'choroplethDataUnit': '% won head-to-head',
-      'choroplethIsExact': true
-    },
+      const fetches = {};
 
-    //Buffalo
-    'buffalo/use': {
-      'displayName': 'Buffalo Property Uses',
-      'visibleImage': '../buffalo-properties/use-categories.cropped.png',
-      'bitmapImage': '../buffalo-properties/bitmap.png',
-      'bitmapKey': '../buffalo-properties/property.data.json',
-      'idFunc': 'buffalo'
-    },
-    'buffalo/assessment-sqft': {
-      'displayName': 'Buffalo Properties - Assessed value per sqft',
-      'visibleImage': '../buffalo-properties/single-family-assessment-per-sqft.png',
-      'bitmapImage': '../buffalo-properties/bitmap.png',
-      'bitmapKey': '../buffalo-properties/property.data.json',
-      'idFunc': 'buffalo'
-    }
-  }
-  const viewName = urlParams.get('view') || 'bitmapus/zip';
-  if (viewName in views) {
-    const view = views[viewName];
-    let args = Object.assign({}, view);
+      if ('bitmapKey' in view) {
+        console.log('fetch bitmapKey')
+        fetches['bitmapKey'] = fetch(view['bitmapKey']);
+      }
 
-    args.idFunc = ('idFunc' in view) ? idFuncs[view.idFunc] : getZipFromColor;
-    args.labelFunc = ('idFunc' in view) ? idFuncs[view.idFunc] : getLabelFromColor;
-    args.choroplethScale = ('choroplethScaleName' in view) ? getAllColorsForScale(view.choroplethScaleName) : null;
+      if ('choroplethQuantiles' in view) {
+        console.log('fetch choroplethQuantiles key')
+        fetches['choroplethQuantiles'] = fetch(view['choroplethQuantiles']);
+      }
 
-    const fetches = {};
-
-    if ('bitmapKey' in view) {
-      console.log('fetch bitmapKey')
-      fetches['bitmapKey'] = fetch(view['bitmapKey']);
-    }
-
-    if ('choroplethQuantiles' in view) {
-      console.log('fetch choroplethQuantiles key')
-      fetches['choroplethQuantiles'] = fetch(view['choroplethQuantiles']);
-    }
-
-    Promise.all(Object.values(fetches))
-    .then(responses=>Promise.all(responses.map(resp => resp.json())))
-    .then(data => {
-      Object.keys(fetches).forEach((key, i) => {
-        args[key + 'Data'] = data[i];
+      Promise.all(Object.values(fetches))
+      .then(responses=>Promise.all(responses.map(resp => resp.json())))
+      .then(data => {
+        Object.keys(fetches).forEach((key, i) => {
+          args[key + 'Data'] = data[i];
+        })
+        bitmap(Object.assign({ onHover: hoverBitmap.withArgs(args) }, view));
       })
-      bitmap(Object.assign({ onHover: hoverBitmap.withArgs(args) }, view));
-    })
-    .catch(error => console.error(error));
+      .catch(error => console.error(error));
 
-  }
+    }
+  });
 }
 
