@@ -129,8 +129,9 @@ if (map === 'covid') {
    */
 
 } else {
-  fetch('./views.json').then(resp => resp.json()).then(views=> {
-    const viewName = urlParams.get('view') || 'bitmapus/zip';
+  const listName = urlParams.get('list') || 'views';
+  fetch(`./${listName}.json`).then(resp => resp.json()).then(views=> {
+    const viewName = urlParams.get('view') || Object.keys(views)[0];
     if (viewName in views) {
       const view = views[viewName];
       let args = Object.assign({}, view);
